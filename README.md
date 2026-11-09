@@ -1,24 +1,16 @@
-# Bloomy per M-VAVE FM-1
+# Bloomy 1.0.1 per M-VAVE FM-1
 
-Strumenti statici per Bloomy 1.0: installazione firmware, Backup/Restore,
-conversione .loom8/TXT/.rfm1state/.fm1save ed estrazione/ricomposizione degli slot.
+Strumenti1.4: Installazione, Backup/Restore, Convertitore e Progetti/slot.
+https://gfcalvi.github.io/bloomy-fm1/
 
-Aprire il sito in MIDIWeb Browser su iPhone e scegliere **Make Available Offline**.
-La pagina principale incorpora tutti gli strumenti, firmware e campioni.
-Nessuna login e nessun server locale sono necessari per questa distribuzione.
+Versione installata: GLO → Setup mostra Bloomy1.0.1. Anche il loader mostra
+la versione durante l'aggiornamento. Prima dell'installazione salva un backup.
+
+Mac: Chrome/Edge online. iPhone: MIDIWeb Browser, online o Make Available Offline.
+Per aggiornare la copia offline riapri il sito con rete attiva e salvalo di nuovo.
+Firmware e campioni incorporati. Nessun login o server locale necessario.
+Manuale utente edizione12 e pacchetto completo1.4 disponibili nei download.
 File personali elaborati nel browser, senza upload al server.
 
-Manuale PDF edizione 8 e pacchetto offline sono download separati.
-Il firmware rimane `1.0.0-blue`; gli strumenti sono alla revisione 1.2.
-
-## Licenze
-
-MPL-2.0 per gli strumenti e componenti ove indicato; firmware e dipendenze
-mantengono le rispettive licenze e attribuzioni. Vedere LICENZE.txt e gli
-archivi sorgenti corrispondenti. Nessuna licenza esclusiva viene applicata a
-componenti di terzi. Derivato da LOOM-8 / fm1-base e relativi contributori.
-
-## Pubblicazione
-
-GitHub Pages, branch main, cartella root. Nessun backend, nessuna build.
-I file di salvataggio personali non fanno parte di questo repository.
+Formati progetto23/preset14 e16voci invariati. ID/formati compatibili.
+Licenze e copyright originali conservati: LICENZE.txt e sorgenti inclusi.

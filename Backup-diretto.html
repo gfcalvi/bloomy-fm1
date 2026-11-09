@@ -900,8 +900,8 @@ async function findLink(midi, wait = 1000) {
   // and names the two ends apart: "Bloomy FM-1" in, "MIDIOUT2 (Bloomy FM-1)" out); never probe other gear
   const outs = [...midi.outputs.values()].filter((o) => o.state !== "disconnected");
   const ins = [...midi.inputs.values()].filter((i) => i.state !== "disconnected" &&
-    /loom|fm-?1|felucca|composite|sinco|usb-midi/i.test(i.name || ""))
-    .sort((a, b) => /loom/i.test(b.name) - /loom/i.test(a.name));
+    /bloomy|loom|fm-?1|felucca|composite|sinco|usb-midi/i.test(i.name || ""))
+    .sort((a, b) => /bloomy|loom/i.test(b.name) - /bloomy|loom/i.test(a.name));
   const base = (s) => (s || "").replace(/\s+\d+$/, "").replace(/^MIDI(?:IN|OUT)\d*\s*\((.*)\)$/i, "$1");
   for (const input of ins) {
     const same = outs.filter((o) => base(o.name) === base(input.name));
