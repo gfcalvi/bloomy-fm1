@@ -1,16 +1,13 @@
-# Bloomy 1.0.1 per M-VAVE FM-1
-
-Strumenti1.4: Installazione, Backup/Restore, Convertitore e Progetti/slot.
+# Bloomy 1.0.1 · strumenti 1.5
 https://gfcalvi.github.io/bloomy-fm1/
 
-Versione installata: GLO → Setup mostra Bloomy1.0.1. Anche il loader mostra
-la versione durante l'aggiornamento. Prima dell'installazione salva un backup.
+Installazione · Backup · Carica brano · Convertitore · Set e slot.
+Carica un singolo progetto in uno slot conservando gli altri due, preset e campioni.
+SAVE e STOP prima della lettura; backup preventivo e rilettura di verifica inclusi.
+Formati .bloomyproject/.loom8/.txt/.rfm1state/.fm1save. Banchi incompatibili bloccati.
 
-Mac: Chrome/Edge online. iPhone: MIDIWeb Browser, online o Make Available Offline.
-Per aggiornare la copia offline riapri il sito con rete attiva e salvalo di nuovo.
-Firmware e campioni incorporati. Nessun login o server locale necessario.
-Manuale utente edizione12 e pacchetto completo1.4 disponibili nei download.
-File personali elaborati nel browser, senza upload al server.
-
-Formati progetto23/preset14 e16voci invariati. ID/formati compatibili.
-Licenze e copyright originali conservati: LICENZE.txt e sorgenti inclusi.
+Mac: Chrome/Edge. iPhone: MIDIWeb Browser, anche dopo Make Available Offline.
+Aggiornare la copia salvata per vedere Strumenti1.5. Nessun login/server locale.
+Firmware invariato1.0.1; nessuna reinstallazione per usare Carica brano.
+Manuale edizione13. File personali elaborati nel browser, senza upload.
+Licenze e attribuzioni originali conservate in LICENZE.txt e sorgenti.

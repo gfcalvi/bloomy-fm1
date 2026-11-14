@@ -1,0 +1,1154 @@
+<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"><title>Bloomy · Carica un brano</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#081827;color:#e6f4ff;font:16px/1.55 system-ui}main{max-width:850px;margin:auto;padding:26px 20px 60px}h1{font-size:36px;line-height:1.12}h2{font-size:22px;color:#8ad7ff}section{background:#11273c;border:1px solid #34516b;border-radius:14px;padding:20px;margin:18px 0}button,.download{display:inline-block;padding:12px 16px;border:0;border-radius:9px;background:#84d5ff;color:#071827;font:600 16px system-ui;text-decoration:none;margin:8px 8px 0 0;cursor:pointer}button.secondary{background:#294660;color:#fff}button:disabled{opacity:.45;cursor:default}input,select{display:block;width:100%;max-width:100%;padding:12px;margin:7px 0 16px;background:#081b2c;color:#fff;border:1px solid #55738d;border-radius:8px;font:16px system-ui}label{display:block;font-weight:600}small,.dim{color:#adc5da}.error{color:#ffb6ba}.ok{color:#a2e4c3}progress{width:100%;height:20px}.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.slot{padding:12px;background:#081827;border-radius:8px}.note{border-left:3px solid #84d5ff;padding-left:12px}[hidden]{display:none!important}a{color:#8ad7ff}@media(max-width:550px){.slots{grid-template-columns:1fr}h1{font-size:30px}section{padding:16px}}
+</style><main><small>BLOOMY · STRUMENTI 1.5</small><h1>Carica un brano in uno slot.</h1><p>Scegli il file e dove metterlo. Gli altri due slot, la libreria preset/kit e i campioni del tuo FM-1 vengono conservati.</p><p class="note">Sull’FM-1 premi <b>SAVE</b> per salvare il lavoro aperto e ferma <b>PLAY</b>. Poi collega il dispositivo via USB. Serve Bloomy 1.0 o 1.0.1.</p>
+<section><h2>1 · Scegli il brano</h2><label for="song">File del brano</label><input id="song" type="file"><small>.bloomyproject, .loom8, .txt, .rfm1state o .fm1save. Non serve convertirlo prima.</small><p id="fileinfo"></p><div id="sourcebox" hidden><label for="source">Progetto da prendere dal file</label><select id="source"></select></div><label for="destination">Slot di destinazione sull’FM-1</label><select id="destination"><option value="1">Slot 1</option><option value="2">Slot 2</option><option value="3">Slot 3</option></select><button id="prepare" disabled>Leggi FM-1 e prepara il caricamento</button></section>
+<section id="devicepanel" hidden><h2>2 · Controlla e carica</h2><div id="slots" class="slots"></div><p id="plan"></p><p id="resources" class="dim"></p><div id="backupfiles"></div><p class="dim">Puoi salvare il backup completo prima di continuare. Durante la conferma non cambiare progetto o dati sull’FM-1.</p><div id="confirmation" hidden role="region" aria-label="Conferma caricamento slot"><button id="cancel" class="secondary">Annulla</button><button id="commit">Carica il brano</button></div></section>
+<section aria-label="Stato caricamento"><p id="status" role="status" aria-live="polite">Scegli un file per iniziare.</p><progress id="progress" max="100" value="0" hidden></progress></section><p><b>Dopo il caricamento:</b> sull’FM-1 apri HOME → SEL → LOAD PROJECT e scegli lo slot indicato. Se hai sostituito il progetto già aperto, il dispositivo lo ricarica.</p><p class="dim">Vuoi sostituire l’intero archivio? Usa Backup → Ripristino completo. Per preparare un set di tre brani usa Set e slot. I file restano nel browser, senza upload a un server.</p></main>
+<script>// MIDIWeb may expose its native Web MIDI bridge only in the top document.
+// Request access there; no messages are sent and no permissions are requested until a click.
+if(parent!==window&&typeof parent.navigator.requestMIDIAccess==='function'){
+ Object.defineProperty(navigator,'requestMIDIAccess',{configurable:true,value:options=>parent.navigator.requestMIDIAccess(options)});
+}
+</script>
+<script>globalThis.Bloomy = (()=>{'use strict';
+const enc=new TextEncoder(),dec=new TextDecoder('utf-8',{fatal:true}),SIZE=0x100000,BANKSIZE=0x36000,HDR=2048;
+const CORES={'1.0.1':'9d8c08d61e3bd9370c1b93782d32f46a6f6c89e3a42a97af0daf21ad7f7ddbbf','1.0.0':'5dd53e3737ad1a994de7f569a0365ed2ecff82f2e14d81935c35fcef0b8c9d24','1.0.0-blue':'c9bb3c25e14fde3065d3defbdc2cb61a9e59f0eaf08c8e3d54011cb037260ce6','0.9.6-blue96':'7029f6ab69ee352dce0cecd46ef3473df0fc4ab8b527b8d8cb6e0841cb847692'};
+const READ_CORES={...CORES,'0.9.5-blue95':'e625a478ba0dbb601454edf0b48d844986ebbe57ba20ba96d6560b45aa8f25e3'};
+const FW_HASH='fc4657446c35c9145f100f1d294a2f5a68c672937e7d43f03338241c7eb1805d';
+const FW_ALLOWED=[FW_HASH,'ce3ee2378ab16b9779982b7aac2965d678e3187d3cb0d8c6fd7b0aabf2162c98','8b2a5f14f9fe302008824d121b8a1a6cc5dbaffd6297e588ecdd32b426e4857b','4f42c57ce8d61b10dfddd3f60d9670f3ae9c5416578c8cdeb1b12bc08a33217d','1e39edad717a27d967de06efe4bf3425adb62b7df0ec1711acd7c221e93bc4fa'];
+const STORE_MAP=[0xdc000,0xde000,...Array.from({length:21},(_,i)=>0x97000+i*8192),0xfc000];
+const regions=[[0xc1000,0x1b000],[0xe5000,0x17000],[0x93000,0x4000]];
+function fail(s){throw Error(s)}
+const view=b=>new DataView(b.buffer,b.byteOffset,b.byteLength),u16=(b,p)=>view(b).getUint16(p,true),u32=(b,p)=>view(b).getUint32(p,true);
+function crc(b){let c=0xffffffff;for(const v of b){c^=v;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0)}return(c^0xffffffff)>>>0}
+function b64(b){let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode(...b.subarray(i,i+8192));return btoa(s)}
+function un64(s){if(typeof s!=='string'||s.length%4||/[^A-Za-z0-9+/=]/.test(s))fail('Base64 non valido.');let raw;try{raw=atob(s)}catch(_){fail('Base64 non valido.')}if(btoa(raw)!==s)fail('Base64 non canonico.');return Uint8Array.from(raw,c=>c.charCodeAt(0))}
+// SHA-256 fallback for local file browsers without SubtleCrypto. No remote dependencies.
+function shaPure(data){const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];const h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19],b=new Uint8Array(Math.ceil((data.length+9)/64)*64);b.set(data);b[data.length]=128;new DataView(b.buffer).setUint32(b.length-4,data.length*8,false);const w=new Uint32Array(64),r=(x,n)=>(x>>>n)|(x<<(32-n));for(let p=0;p<b.length;p+=64){for(let i=0;i<16;i++)w[i]=new DataView(b.buffer).getUint32(p+4*i,false);for(let i=16;i<64;i++)w[i]=(w[i-16]+(r(w[i-15],7)^r(w[i-15],18)^(w[i-15]>>>3))+w[i-7]+(r(w[i-2],17)^r(w[i-2],19)^(w[i-2]>>>10)))>>>0;let[a,c,d,e,f,g,j,k]=h;for(let i=0;i<64;i++){let t=(k+(r(f,6)^r(f,11)^r(f,25))+((f&g)^(~f&j))+K[i]+w[i])>>>0,t2=((r(a,2)^r(a,13)^r(a,22))+((a&c)^(a&d)^(c&d)))>>>0;k=j;j=g;g=f;f=(e+t)>>>0;e=d;d=c;c=a;a=(t+t2)>>>0;}[a,c,d,e,f,g,j,k].forEach((v,i)=>h[i]=(h[i]+v)>>>0)}return h.map(x=>x.toString(16).padStart(8,'0')).join('')}
+async function sha(b){return globalThis.crypto?.subtle?[...new Uint8Array(await crypto.subtle.digest('SHA-256',b))].map(x=>x.toString(16).padStart(2,'0')).join(''):shaPure(b)}
+function validate(model){const o=model.objects,versions=[];for(const[k,b]of Object.entries(o)){if(!/^(0|[1-9][0-9]*)$/.test(k)||+k>=24||!(b instanceof Uint8Array)||b.length>3840)fail('Oggetto non valido: '+k)}
+ if(o[1]?.length&&(o[1].length<4||![13,14].includes(u32(o[1],0))))fail('Preset di un formato non supportato: riaprire con Bloomy 0.9.6/1.0 e salvare.');
+ for(let p=0;p<3;p++){let id=2+p*7;const a=o[id];if(a?.length){if(a.length<8||u32(a,0)!==0x384d4f4c||![21,22,23].includes(u32(a,4)))fail('Progetto '+(p+1)+': formati supportati 21–23 (Bloomy 0.9.5/0.9.6/1.0).');for(let i=1;i<7;i++)if(!o[id+i]?.length)fail('Progetto '+(p+1)+' incompleto: mancano parti del pattern.');versions.push(p+1)}else if(Array.from({length:6},(_,i)=>o[id+i+1]?.length).some(Boolean))fail('Parti di progetto senza impostazioni: slot '+(p+1))}
+ model.projects=versions;model.projectFormats=versions.map(p=>u32(o[2+(p-1)*7],4));if(model.bank)checkBank(model.bank);return model}
+function checkBank(b){if(b.length<HDR||b.length>BANKSIZE||u32(b,0)!==0x504d534c||![2,3].includes(u16(b,4))||b[7]||b[6]>44||u32(b,16)!==BANKSIZE||u32(b,8)!==b.length-HDR||crc(b.subarray(HDR))!==u32(b,12))fail('Banco campioni LSMP danneggiato o incompatibile.');const blk=b[4]===2?64:128;for(let i=0;i<b[6];i++){let p=64+i*40,adp=u32(b,p+12),ck=u32(b,p+16),n=u32(b,p+20),ls=u32(b,p+24),le=u32(b,p+28),rate=u16(b,p+36);if(!n||adp<HDR||adp+Math.ceil(n/2)>b.length||ck<HDR||ck%4||ck+Math.ceil(n/blk)*4>b.length||ls>le||le>n||b[p+32]>127||rate<4000||rate>48000)fail('Voce campione non valida: '+(i+1))}return b[6]}
+function textRead(text){if(enc.encode(text).length>1048576)fail('TXT troppo grande.');const raw=JSON.parse(text);if(!raw||typeof raw!=='object'||Array.isArray(raw)||!Object.keys(raw).length)fail('TXT non riconosciuto.');const objects=Object.create(null);for(const[k,v]of Object.entries(raw))objects[k]=un64(v);return validate({objects,bank:null,source:'FM-1 Emu TXT',notes:['Il TXT non contiene il banco campioni.']})}
+function textWrite(m,allowLoss=false){validate(m);if(m.bank&&checkBank(m.bank)>0&&!allowLoss)fail('Il TXT di FM-1 Emu non contiene campioni. Conferma l’esportazione dei soli oggetti o usa .loom8/.rfm1state.');const o=Object.create(null);for(const k of Object.keys(m.objects).sort((a,b)=>a-b))o[k]=b64(m.objects[k]);return enc.encode(JSON.stringify(o))}
+function loomRead(b){b=new Uint8Array(b);if(b.length<20||dec.decode(b.subarray(0,4))!=='LM8B'||u16(b,4)!==1||u16(b,6)!==22||u32(b,8)>1||crc(b.subarray(0,12))!==u32(b,12))fail('Header .loom8 non valido.');let pos=16;const objects=Object.create(null);for(let i=1;i<=22;i++){if(pos+8>b.length)fail('Backup troncato.');let id=u16(b,pos),len=u16(b,pos+2),sum=u32(b,pos+4);pos+=8;if(id!==i||len>3840||pos+len>b.length||crc(b.subarray(pos,pos+len))!==sum)fail('CRC/oggetto backup non valido: '+i);if(len)objects[id]=b.slice(pos,pos+len);pos+=len;}if(pos+4>b.length||crc(b.subarray(0,pos))!==u32(b,pos))fail('CRC globale backup non valido.');pos+=4;let bank=null;while(pos<b.length){if(pos+12>b.length)fail('Sezione extra troncata.');let tag=dec.decode(b.subarray(pos,pos+4)),len=u32(b,pos+4);pos+=8;if(tag!=='LSMP'||bank||len>BANKSIZE||pos+len+4>b.length)fail('Sezione extra sconosciuta/duplicata: '+tag);bank=b.slice(pos,pos+len);if(crc(bank)!==u32(b,pos+len))fail('CRC sezione LSMP errato.');pos+=len+4;}return validate({objects,bank,source:'FM-1 fisico .loom8',notes:bank?[]:['Nessun banco campioni nel backup: il file conserva soltanto progetti/preset.']})}
+function loomWrite(m){validate(m);let size=20+22*8+Array.from({length:22},(_,i)=>m.objects[i+1]?.length||0).reduce((a,b)=>a+b,0),extra=m.bank?m.bank.length+12:0,b=new Uint8Array(size+extra),v=view(b);b.set(enc.encode('LM8B'));v.setUint16(4,1,true);v.setUint16(6,22,true);v.setUint32(12,crc(b.subarray(0,12)),true);let p=16;for(let id=1;id<=22;id++){let d=m.objects[id]||new Uint8Array();v.setUint16(p,id,true);v.setUint16(p+2,d.length,true);v.setUint32(p+4,crc(d),true);b.set(d,p+8);p+=8+d.length;}v.setUint32(p,crc(b.subarray(0,p)),true);p+=4;if(m.bank){b.set(enc.encode('LSMP'),p);v.setUint32(p+4,m.bank.length,true);b.set(m.bank,p+8);v.setUint32(p+8+m.bank.length,crc(m.bank),true)}return b}
+function flashWrite(m){validate(m);const b=new Uint8Array(SIZE).fill(255),v=view(b);let p=12,n=0;for(const k of Object.keys(m.objects).sort((a,b)=>a-b)){const d=m.objects[k];if(!d.length)continue;v.setUint32(p,+k,true);v.setUint32(p+4,d.length,true);b.set(d,p+8);p+=8+d.length;n++;}if(p+4>0x93000)fail('Troppi dati.');v.setUint32(0,0x31424d46,true);v.setUint32(4,n,true);v.setUint32(8,p-12,true);v.setUint32(p,crc(b.subarray(0,p)),true);if(m.bank){let off=0;for(const[a,len]of regions){let part=m.bank.subarray(off,off+len);b.set(part,a);off+=len;}}return b}
+function flashRead(b){b=new Uint8Array(b);if(b.length!==SIZE||u32(b,0)!==0x31424d46)fail('Flash RemoteFM1 non riconosciuta.');let count=u32(b,4),len=u32(b,8),p=12;if(count>24||len>0x93000-16||crc(b.subarray(0,12+len))!==u32(b,12+len))fail('CRC flash RemoteFM1 errato.');const objects=Object.create(null);for(let i=0;i<count;i++){if(p+8>12+len)fail('Flash troncata.');let id=u32(b,p),n=u32(b,p+4);p+=8;if(id>=24||n>3840||id in objects||p+n>12+len)fail('Oggetto RemoteFM1 non valido.');if(n)objects[id]=b.slice(p,p+n);p+=n;}if(p!==12+len)fail('Lunghezza archivio incoerente.');const raw=new Uint8Array(BANKSIZE);let off=0;for(const[a,len]of regions){raw.set(b.subarray(a,a+len),off);off+=len;}let bank=null;if(raw.some(v=>v!==255)){if(u32(raw,0)!==0x504d534c||u32(raw,8)>BANKSIZE-HDR)fail('Dati campioni non riconosciuti: conversione fermata.');bank=raw.slice(0,HDR+u32(raw,8));checkBank(bank);if(raw.subarray(bank.length).some(v=>v!==255))fail('Dati extra dopo i campioni: conversione fermata.');}const allowed=new Uint8Array(SIZE);allowed.fill(1,0,12+len+4);for(const[a,n]of regions)allowed.fill(1,a,a+n);for(let i=0;i<SIZE;i++)if(!allowed[i]&&b[i]!==255)fail('Dati flash non supportati fuori dagli oggetti/campioni.');return validate({objects,bank,source:'RemoteFM1 .rfm1state',notes:[]})}
+async function decompress(body,wasm){const {instance}=await WebAssembly.instantiate(wasm,{wasi_snapshot_preview1:{fd_close:()=>8,fd_write:()=>8,fd_seek:()=>8,proc_exit:()=>fail('Errore LZFSE')}}),x=instance.exports;if(x._initialize)x._initialize();const a=x.malloc(body.length),b=x.malloc(SIZE+1);if(!a||!b)fail('Memoria insufficiente.');try{new Uint8Array(x.memory.buffer).set(body,a);let n=x.decode_flash(b,SIZE+1,a,body.length);if(n!==SIZE)fail('Stato LZFSE non valido.');return new Uint8Array(x.memory.buffer,b,n).slice()}finally{x.free(a);x.free(b)}}
+async function stateRead(b,wasm){if(b.length<12||b.length>3*SIZE||dec.decode(b.subarray(0,8))!=='RFM1STAT')fail('Serve uno stato .rfm1state, non il firmware .rfm1.');let n=u32(b,8);if(n<1||n>65536||12+n>b.length)fail('Manifest non valido.');let m=JSON.parse(dec.decode(b.subarray(12,12+n))),s=m.state;if(m.format!==1||!s||s.firmwareID!=='loom8_blue'||s.kind!=='wasm'||!READ_CORES[s.version]||s.sha256!==READ_CORES[s.version])fail('Core RemoteFM1 non qualificato: versione '+String(s.version).slice(0,60)+', SHA '+String(s.sha256).slice(0,16)+'. Conserva il file e richiedi verifica, senza modificarne il manifest.');if(s.flashSize!==SIZE||!Number.isInteger(m.flashBytes)||m.flashBytes<1||12+n+m.flashBytes!==b.length)fail('Dimensioni stato non valide.');let flash=m.flashEncoding==='none'?b.subarray(12+n):m.flashEncoding==='lzfse'?await decompress(b.subarray(12+n),wasm):fail('Compressione non supportata.');if(flash.length!==SIZE||await sha(flash)!==s.flashSHA256)fail('SHA256 flash RemoteFM1 errato.');const out=flashRead(flash);out.version=s.version;if(out.projectFormats.some(f=>f<23))out.notes.push('Progetto precedente al formato23: Bloomy1.0/Bloomy 0.9.6 lo migrano al caricamento; il convertitore conserva i byte originali.');return out}
+async function stateWrite(model,version='1.0.1',name='Bloomy convertito'){if(!CORES[version])fail('Versione destinazione non supportata.');const flash=flashWrite(model),s={id:globalThis.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{let r=Math.random()*16|0;return(c==='x'?r:r&3|8).toString(16)}),name:name.slice(0,100),note:'Convertito offline con Bloomy. Progetti formato23, preset14.',firmwareID:'loom8_blue',firmwareName:'Bloomy',kind:'wasm',version,sha256:CORES[version],date:Date.now()/1000,flashSize:SIZE,flashSHA256:await sha(flash),master:512,transpose:0,keyTouch:false,origin:'app'},m=enc.encode(JSON.stringify({format:1,state:s,flashEncoding:'none',flashBytes:SIZE})),out=new Uint8Array(12+m.length+SIZE);out.set(enc.encode('RFM1STAT'));view(out).setUint32(8,m.length,true);out.set(m,12);out.set(flash,12+m.length);return out}
+async function saveRead(r){
+ if(r.format!=='fm1-emulator-save'||r.version!==1||typeof r.name!=='string'||r.name.length>256||!FW_ALLOWED.includes(r.hash)||!Array.isArray(r.sectors)||r.sectors.length>256)fail('Serve un .fm1save v1 di Bloomy 0.9.6/1.0 con firmware qualificato.');
+ if(r.package!=null){const pkg=un64(r.package);if(pkg.length>1048576||await sha(pkg)!==r.hash)fail('Pacchetto firmware .fm1save non corrispondente al suo SHA256.');}
+ const sectors=new Map();for(const item of r.sectors){if(!Number.isInteger(item.at)||item.at<0||item.at>=SIZE||item.at%4096||sectors.has(item.at))fail('Settore duplicato o indirizzo non valido.');const b=un64(item.data);if(b.length!==4096)fail('Settore incompleto.');const allowed=STORE_MAP.some(a=>item.at===a||item.at===a+4096)||regions.some(([a,n])=>item.at>=a&&item.at<a+n);if(!allowed&&b.some(v=>v!==255))fail('Dati esterni a progetti/campioni: conversione fermata per non perderli.');sectors.set(item.at,b);}
+ const objects=Object.create(null),notes=[];for(let id=0;id<24;id++){const valid=[];let used=0;for(let copy=0;copy<2;copy++){const b=sectors.get(STORE_MAP[id]+copy*4096);if(!b||b.every(v=>v===255))continue;used++;const n=u32(b,12);if(u32(b,0)!==0x30583058||u16(b,4)!==id||n>3840||crc(b.subarray(0,28))!==u32(b,28)||crc(b.subarray(256,256+n))!==u32(b,16))continue;valid.push({seq:u32(b,8),copy,data:b.slice(256,256+n)});}valid.sort((a,b)=>b.seq-a.seq||a.copy-b.copy);if(!valid.length&&used)fail('Nessuna copia valida per oggetto '+id);if(valid.length){if(valid[0].data.length)objects[id]=valid[0].data;if(valid.length<used)notes.push('Oggetto '+id+': recuperata la copia valida A/B.');}}
+ const raw=new Uint8Array(BANKSIZE).fill(255);let off=0;for(const[a,n]of regions){for(let p=0;p<n;p+=4096){const b=sectors.get(a+p);if(b)raw.set(b,off+p);}off+=n;}let bank=null;if(raw.some(v=>v!==255)){if(u32(raw,0)!==0x504d534c||u32(raw,8)>BANKSIZE-HDR)fail('Banco campioni .fm1save non riconosciuto.');bank=raw.slice(0,HDR+u32(raw,8));checkBank(bank);if(raw.subarray(bank.length).some(v=>v!==255))fail('Dati extra nel banco campioni: conversione fermata.');}return validate({objects,bank,source:'FM-1 Emu .fm1save',notes});
+}
+async function saveWrite(model,pkg,defaultBank){validate(model);if(!pkg)pkg=un64(globalThis.BloomyFirmwareBase64||'');if(await sha(pkg)!==FW_HASH)fail('Firmware Bloomy 1.0.1 incorporato non valido.');let bank=model.bank;if(!bank){bank=defaultBank||un64(globalThis.BloomyFactoryBase64||'');checkBank(bank);}const sectors=[];for(let id=0;id<24;id++){const d=model.objects[id];for(let copy=0;copy<2;copy++){const b=new Uint8Array(4096).fill(255),v=view(b);if(d?.length&&copy===0){v.setUint32(0,0x30583058,true);v.setUint16(4,id,true);v.setUint16(6,0,true);v.setUint32(8,1,true);v.setUint32(12,d.length,true);v.setUint32(16,crc(d),true);b.set(d,256);v.setUint32(28,crc(b.subarray(0,28)),true);}sectors.push({at:STORE_MAP[id]+copy*4096,data:b64(b)});}}
+ let off=0;for(const[a,n]of regions){for(let p=0;p<n;p+=4096){const b=new Uint8Array(4096).fill(255);b.set(bank.subarray(off+p,off+p+4096));sectors.push({at:a+p,data:b64(b)});}off+=n;}
+ return enc.encode(JSON.stringify({format:'fm1-emulator-save',version:1,hash:FW_HASH,name:'Bloomy convertito',package:b64(pkg),sectors}));}
+
+async function read(b,wasm){if(b.length>3*SIZE)fail('File troppo grande (massimo3MiB).');if([123,239,32,10,13,9].includes(b[0])){const text=dec.decode(b).replace(/^\uFEFF/,'');let parsed=JSON.parse(text);return parsed?.format==='fm1-emulator-save'?saveRead(parsed):textRead(text);}if(dec.decode(b.subarray(0,4))==='LM8B')return loomRead(b);if(dec.decode(b.subarray(0,8))==='RFM1STAT')return stateRead(b,wasm);fail('Formato non riconosciuto. Scegli .loom8, .txt o .rfm1state; .rfm1 è firmware.')}
+
+return{validate,saveRead,saveWrite,FW_HASH,STORE_MAP,read,textRead,textWrite,loomRead,loomWrite,flashRead,flashWrite,stateRead,stateWrite,checkBank,crc,sha,shaPure,b64,un64,CORES};})();
+globalThis.Picker=(()=>{
+const E=new TextEncoder(),D=new TextDecoder('utf-8',{fatal:true});
+const equal=(a,b)=>a===b||!!a&&!!b&&a.length===b.length&&a.every((v,i)=>v===b[i]);
+function extract(bytes,slot,name='Progetto'){
+ if(!Number.isInteger(slot)||slot<1||slot>3)throw Error('Slot non valido.');
+ const m=Bloomy.loomRead(bytes), objects={};
+ if(m.objects[1])objects[1]=m.objects[1];
+ for(let i=0;i<7;i++){const b=m.objects[2+(slot-1)*7+i];if(b)objects[2+i]=b;}
+ return E.encode(JSON.stringify({format:'bloomy-project',version:1,name:String(name).slice(0,120),sourceSlot:slot,backup:Bloomy.b64(Bloomy.loomWrite({objects,bank:m.bank}))}));
+}
+function read(bytes){
+ if(bytes.length>600000)throw Error('File progetto troppo grande.');
+ const p=JSON.parse(D.decode(bytes));
+ if(p.format!=='bloomy-project'||p.version!==1||typeof p.name!=='string'||p.name.length>120)throw Error('Formato progetto non riconosciuto.');
+ const m=Bloomy.loomRead(Bloomy.un64(p.backup));
+ if(m.projects.some(s=>s!==1))throw Error('Il file singolo contiene più slot.');
+ return {...m,name:p.name,empty:!m.projects.length};
+}
+function compose(projects,library=null,acceptLibrary=false){
+ if(projects.length!==3||!projects.some(Boolean))throw Error('Carica almeno un file progetto.');
+ if(library===null)library=projects.findIndex(Boolean);
+ if(!Number.isInteger(library)||library<0||library>2||!projects[library])throw Error('Libreria non valida.');
+ for(const p of projects)if(p)Bloomy.validate(p);
+ const active=projects.filter(p=>p&&!p.empty), bank=(active[0]||projects.find(Boolean)).bank;
+ if(active.some(p=>!equal(p.bank,bank)))throw Error('Banchi campioni diversi (o assenti): impossibile unire senza rimappare i campioni. Usa progetti con lo stesso banco LSMP.');
+ const presets=projects[library].objects[1];
+ if(active.some(p=>!equal(p.objects[1],presets))&&!acceptLibrary)throw Error('Librerie preset/kit diverse: scegli quale conservare e conferma la sostituzione della libreria condivisa.');
+ const objects={};if(presets)objects[1]=presets;
+ projects.forEach((p,s)=>{if(!p)return;for(let i=0;i<7;i++)if(p.objects[2+i])objects[2+7*s+i]=p.objects[2+i];});
+ const bytes=Bloomy.loomWrite({objects,bank});Bloomy.loomRead(bytes);return bytes;
+}
+return {extract,read,compose,equal};})();
+/* MPL-2.0. Bloomy: merge one saved project into a freshly read device archive.
+ * Uses the existing journalled all-object restore; untouched objects are byte-preserved.
+ * It never writes a sample bank or replaces the shared preset library. */
+globalThis.SlotTransfer=(()=>{
+'use strict';
+const eq=(a,b)=>a===b||(!a?.length&&!b?.length)||!!a&&!!b&&a.length===b.length&&a.every((v,i)=>v===b[i]);
+const u32=(b,p)=>new DataView(b.buffer,b.byteOffset,b.byteLength).getUint32(p,true);
+function slot(s){if(!Number.isInteger(s)||s<1||s>3)throw Error('Scegli uno slot da 1 a 3.');return 2+(s-1)*7}
+function settings(a){
+ if(!a||a.length<62||u32(a,0)!==0x384d4f4c||![21,22,23].includes(u32(a,4)))throw Error('Impostazioni progetto incomplete o non supportate.');
+ const n=u32(a,58);if(n<1||n!==a.length-62)throw Error('Impostazioni compresse non valide.');
+ let src=62,pos=0;const out=new Uint8Array(13*357);
+ while(src<a.length){const c=a[src++];if(c<128){const n=c+1;if(src+n>a.length||pos+n>out.length)throw Error('Progetto troncato.');out.set(a.subarray(src,src+n),pos);src+=n;pos+=n;}else{const n=(c&127)+3;if(src+2>a.length)throw Error('Progetto troncato.');const d=a[src]+256*a[src+1]+1;src+=2;if(d>pos||pos+n>out.length)throw Error('Compressione progetto non valida.');for(let i=0;i<n;i++){out[pos]=out[pos-d];pos++;}}}
+ if(pos!==out.length)throw Error('Dimensione dei parametri progetto non valida.');
+ const refs=new Set();for(let t=0;t<8;t++){const p=out.subarray(t*357,t*357+341),e=p[0];if(e===6||e===7)refs.add(p[1]);if(e===8)for(let k=0;k<11;k++){const o=52+k*20;if(p[o]===10||p[o]===22)refs.add(p[o+1]);}}
+ return {tempo:new DataView(a.buffer,a.byteOffset,a.byteLength).getUint16(20,true)/10,format:u32(a,4),samples:[...refs].sort((a,b)=>a-b)};
+}
+function info(m,s){const id=slot(s),a=m.objects[id];return a?.length?{slot:s,empty:false,...settings(a)}:{slot:s,empty:true}}
+function sample(b,k){const o=64+k*40,n=u32(b,o+20),adp=u32(b,o+12),ck=u32(b,o+16),blk=new DataView(b.buffer,b.byteOffset,b.byteLength).getUint16(4,true)===2?64:128;return {meta:b.slice(o+20,o+40),adpcm:b.slice(adp,adp+Math.ceil(n/2)),checkpoints:b.slice(ck,ck+Math.ceil(n/blk)*4)}}
+function compatibleBank(source,device,refs=[]){
+ if(device)Bloomy.checkBank(device);if(source)Bloomy.checkBank(source);
+ const n=device?device[6]:0;
+ if(refs.some(k=>k>=n))throw Error('Il progetto richiede campioni non presenti sull’FM-1. Carica prima un progetto con campioni compatibili. Il banco del dispositivo non verrà sostituito.');
+ if(!source||!source[6])return {missing:!source,kept:true};
+ if(!device||source[6]>device[6])throw Error('Banco campioni incompatibile: mancano campioni sul dispositivo. Nessun dato è stato scritto.');
+ // Every source index must retain the same data and playback metadata. Extra device samples are fine.
+ for(let k=0;k<source[6];k++){const a=sample(source,k),b=sample(device,k);if(!eq(a.meta,b.meta)||!eq(a.adpcm,b.adpcm)||!eq(a.checkpoints,b.checkpoints))throw Error('Banco campioni incompatibile allo slot campione '+(k+1)+'. Caricamento bloccato per conservare gli altri brani.');}
+ return {missing:false,kept:true};
+}
+function merge(device,incoming,source,destination){
+ Bloomy.validate(device);Bloomy.validate(incoming);const from=slot(source),to=slot(destination),summary=info(incoming,source);
+ if(summary.empty)throw Error('Lo slot sorgente è vuoto.');
+ for(let i=0;i<7;i++)if(!incoming.objects[from+i]?.length)throw Error('Il progetto sorgente è incompleto.');
+ const bank=compatibleBank(incoming.bank,device.bank,summary.samples);
+ const objects=Object.fromEntries(Object.entries(device.objects).map(([k,v])=>[k,new Uint8Array(v)]));
+ for(let i=0;i<7;i++)objects[to+i]=new Uint8Array(incoming.objects[from+i]);
+ const model=Bloomy.validate({objects,bank:device.bank?new Uint8Array(device.bank):null}),image=Bloomy.loomWrite({objects,bank:null});
+ for(let id=1;id<=22;id++)if(id<to||id>=to+7)if(!eq(device.objects[id],model.objects[id]))throw Error('Verifica di conservazione fallita.');
+ return {model,image,source,destination,summary,bank,libraryDiffers:!eq(device.objects[1],incoming.objects[1]),preserved:[1,2,3].filter(s=>s!==destination)};
+}
+function sameArchive(a,b){for(let id=1;id<=22;id++)if(!eq(a.objects[id],b.objects[id]))return false;return eq(a.bank,b.bank)}
+function verify(expected,actual){if(!sameArchive(expected,actual))throw Error('La scrittura è stata accettata, ma la rilettura non corrisponde. Conserva il backup e rileggi il dispositivo prima di riprovare.');return true}
+async function readFile(bytes,decoder){
+ if(bytes.length>3*1048576)throw Error('File troppo grande (massimo 3 MiB).');
+ const first=new TextDecoder().decode(bytes.subarray(0,80)).replace(/^\uFEFF/,'').trimStart();
+ if(first.startsWith('{')){let p;try{p=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch(e){throw Error('File JSON non valido.');}if(p?.format==='bloomy-project'){const m=Picker.read(bytes);if(m.empty)throw Error('Il file progetto è vuoto.');info(m,1);return {...m,sourceName:m.name||'Progetto',sourceSlots:[1]}}}
+ const m=await Bloomy.read(bytes,decoder);if(!m.projects.length)throw Error('Il file non contiene progetti salvati.');for(const s of m.projects)info(m,s);return {...m,sourceSlots:[...m.projects]};
+}
+return {eq,info,settings,compatibleBank,merge,sameArchive,verify,readFile};})();
+
+</script><script>// --- backup protocol: begin (tools/fm1_backup.py, device/backup.c; tested by tests/backup_page_test.mjs)
+const FW = { name: "Bloomy", id: "FM-1_10", magic: "LM8B", version: Number("1"), ext: "loom8" };
+const PB = (() => {
+  const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];   // fm1_install.py / fm1ota.js
+  const RS_REQ = 0x41, BU_REQ = 0x42, BU_END = 0x43;
+  const OK_ADDR = 0xC0000000, ASK_ADDR = 0xC1000000, FAIL_ADDR = 0xCF000000;
+  const NAME = FW.name, MAGIC = [...FW.magic].map((c) => c.charCodeAt(0)), VERSION = FW.version;   // app.h's
+  const HEAD = 16, REC = 8, PAYLOAD_MAX = 3840, MAXDATA = 512;
+  const PLAYING = 10, DECLINED = 11;
+  const ID = FW.id;                                                // the firmware's package identity (its prefix)
+  const DELAY = { poll: 500, idle: 10000, ask: 75000, first: 3000, hs: 1000 };   // ms, as fm1_backup.py
+  const ERRORS = {
+    1: "the file's size", 2: "the transfer (a piece of the file did not arrive)", 3: "the file's head",
+    4: "a part's header", 5: "a part's check (a byte changed on the way)", 6: "the whole file's check",
+    7: `erasing ${NAME}'s memory`, 8: `writing ${NAME}'s memory`, 9: "reading back what was written",
+    10: `${NAME} is playing`, 11: "HOME was pressed on the FM-1",
+    12: `writing the last step (${NAME} finishes it when it's switched on again)`,
+  };
+
+  function fail(code, msg) { const e = new Error(msg); e.code = code; return e; }
+
+  function pack7(data) {
+    const out = []; let acc = 0, nb = 0;
+    for (const b of data) { acc |= b << nb; nb += 8; while (nb >= 7) { out.push(acc & 0x7F); acc >>>= 7; nb -= 7; } }
+    if (nb) out.push(acc & 0x7F);
+    return out;
+  }
+  function unpack7(s) {
+    const out = []; let acc = 0, nb = 0;
+    for (const b of s) { acc |= (b & 0x7F) << nb; nb += 7; while (nb >= 8) { out.push(acc & 0xFF); acc >>>= 8; nb -= 8; } }
+    return out;
+  }
+  const CRC_T = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return t;
+  })();
+  function crc32(bytes, start = 0, end = bytes.length) {          // zlib's
+    let c = 0xFFFFFFFF;
+    for (let i = start; i < end; i++) c = CRC_T[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  const u16 = (b, o) => b[o] | b[o + 1] << 8;
+  const u32 = (b, o) => (b[o] | b[o + 1] << 8 | b[o + 2] << 16 | b[o + 3] << 24) >>> 0;
+  const le32 = (v) => [v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF];
+
+  // a host message in the update's framing (ota.c ota_take)
+  function frame(cmd, body) {
+    const n = body.length; let s = 0;
+    for (const b of body) s += b;
+    return [0xF0, ...pack7([0x00, 0x59, cmd, n & 0xFF, (n >> 8) & 0xFF, 0, ...body, ~s & 0xFF]), 0xF7];
+  }
+  // a device message -> {cmd, body} or null
+  function parseFrame(pkt) {
+    if (pkt.length < 2 || pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) return null;
+    const u = unpack7(pkt.slice(1, -1));
+    if (u.length < 7 || u[0] !== 0 || u[1] !== 0x59) return null;
+    const n = u[3] | u[4] << 8 | u[5] << 16;
+    if (n + 7 !== u.length) return null;
+    let s = 0;
+    for (let i = 6; i < 6 + n; i++) s += u[i];
+    if ((~s & 0xFF) !== u[6 + n]) return null;
+    return { cmd: u[2], body: u.slice(6, 6 + n) };
+  }
+  // the answer to a read request (fm1_install.py response)
+  function response(addr, data, fl = 0) {
+    const n = data.length;
+    const body = [0x00, 0x59, 0x30, (n + 8) & 0xFF, ((n + 8) >> 8) & 0xFF, 0, fl, ...le32(addr), n & 0xFF, (n >> 8) & 0xFF, 0, ...data];
+    let s = 0;
+    for (let i = 6; i < body.length; i++) s += body[i];
+    body.push(~s & 0xFF);
+    return [0xF0, ...pack7(body), 0xF7];
+  }
+  function parseRequest(pkt) {
+    if (pkt.length < 2 || pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) return null;
+    const u = unpack7(pkt.slice(1, -1));
+    if (u.length !== 15 || u[0] !== 0 || u[1] !== 0x59 || u[2] !== 0x30) return null;
+    let s = 0;
+    for (let i = 6; i < 14; i++) s += u[i];
+    if ((~s & 0xFF) !== u[14]) return null;
+    return { fl: u[6], addr: u32(u, 7), len: u[11] | u[12] << 8 | u[13] << 16 };
+  }
+  function parseIdentity(pkt) {
+    if (pkt.length < 2 || pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) return null;
+    const d = unpack7(pkt.slice(1, -1));
+    if (d.length !== 34 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x11) return null;
+    const txt = String.fromCharCode(...d.slice(6, 33)).replace(/\0+$/, "");
+    return /^[^_]+_\d+$/.test(txt) ? txt : null;
+  }
+
+  // a backup file checked whole -> {flags, objs: [{obj, data}]}; throws (code "file") with what is wrong in plain words
+  function parse(image) {
+    const bad = (m) => fail("file", m);
+    if (image.length < HEAD + 4) throw bad(`This file is too short to be a ${NAME} backup.`);
+    if (MAGIC.some((b, i) => image[i] !== b)) throw bad(`This file is not a ${NAME} backup.`);
+    const ver = u16(image, 4), n = u16(image, 6), flags = u32(image, 8);
+    if (u32(image, 12) !== crc32(image, 0, 12)) throw bad("This backup is damaged (its head).");
+    if (ver < VERSION) throw bad(`This is a backup from an older ${NAME} (version ${ver}). This ${NAME} can't restore it. Nothing was changed.`);
+    if (ver !== VERSION) throw bad(`This is a backup from another version of ${NAME} (version ${ver}). This ${NAME} can't restore it.`);
+    if (n !== 22 || flags > 1) throw bad('Questo backup ha una struttura non supportata: attesi 22 oggetti Bloomy.');
+    if (image.length < HEAD + n * REC + 4) throw bad("This backup is cut short.");
+    const objs = []; let pos = HEAD;
+    for (let k = 0; k < n; k++) {
+      if (pos + REC > image.length) throw bad("This backup is cut short.");
+      const obj = u16(image, pos), ln = u16(image, pos + 2), crc = u32(image, pos + 4);
+      pos += REC;
+      if (obj !== k + 1) throw bad('Ordine o identificativo oggetti del backup non valido.');
+      if (ln > PAYLOAD_MAX || pos + ln + 4 > image.length) throw bad(`This backup is damaged (part ${k + 1}).`);
+      if (crc32(image, pos, pos + ln) !== crc) throw bad(`This backup is damaged (part ${k + 1}: a byte changed).`);
+      objs.push({ obj, data: image.subarray(pos, pos + ln) });
+      pos += ln;
+    }
+    if (pos + 4 !== image.length || u32(image, pos) !== crc32(image, 0, pos)) throw bad("This backup is damaged (the whole file's check).");
+    return { flags, objs };
+  }
+  // a file -> {image: the backup itself, sections: [{tag, data}]}: the firmware's sections after the backup's own
+  // CRC (EXTRAS); throws (code "file") on a damaged one. The backup itself is checked by parse.
+  function split(file) {
+    const bad = (m) => fail("file", m);
+    let pos = HEAD;
+    if (file.length >= HEAD) {
+      const n = u16(file, 6);
+      for (let k = 0; k < n && pos + REC <= file.length; k++) pos += REC + u16(file, pos + 2);
+    }
+    pos += 4;
+    if (pos >= file.length) return { image: file, sections: [] };
+    const sections = []; let at = pos;
+    while (at < file.length) {
+      if (at + 8 > file.length) throw bad("This backup is damaged (a section after it is cut short).");
+      const tag = String.fromCharCode(...file.subarray(at, at + 4)), ln = u32(file, at + 4);
+      if (at + 8 + ln + 4 > file.length) throw bad(`This backup is damaged (its section ${tag} is cut short).`);
+      const data = file.subarray(at + 8, at + 8 + ln);
+      if (u32(file, at + 8 + ln) !== crc32(data)) throw bad(`This backup is damaged (its section ${tag}: a byte changed).`);
+      sections.push({ tag, data });
+      at += 8 + ln + 4;
+    }
+    return { image: file.subarray(0, pos), sections };
+  }
+  function join(image, sections) {
+    const parts = [image];
+    for (const { tag, data } of sections) {
+      const head = new Uint8Array(8);
+      for (let i = 0; i < 4; i++) head[i] = tag.charCodeAt(i);
+      head.set(le32(data.length), 4);
+      parts.push(head, data, Uint8Array.from(le32(crc32(data))));
+    }
+    const out = new Uint8Array(parts.reduce((a, p) => a + p.length, 0));
+    let o = 0;
+    for (const p of parts) { out.set(p, o); o += p.length; }
+    return out;
+  }
+  function summary(objs) {
+    const used = objs.filter((o) => o.data.length).length;
+    const total = objs.reduce((a, o) => a + o.data.length, 0);
+    return `${used} of ${objs.length} parts with something saved (${total.toLocaleString("en")} bytes)`;
+  }
+
+  async function handshake(link, tries = 2) {
+    link.drain();
+    for (let t = 0; t < tries; t++) {
+      if (!link.send(HS_QUERY)) return null;
+      const end = Date.now() + DELAY.hs;
+      while (Date.now() < end) {
+        const p = await link.read(end - Date.now());
+        if (!p) break;
+        const id = parseIdentity(p);
+        if (id) return id;
+      }
+    }
+    return null;
+  }
+
+  // the first MIDI port pair that answers as an FM-1 (ports named after the firmware first); a Link from makeLink(input, output).
+  // Never probe other gear: only ports with an FM-1's usual names, and the ones in allowed (the user's picks, web/fm1ota.js's
+  // allow); with only, that one port
+  const NAME_RE = new RegExp(NAME.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  const USUAL_RE = /fm-?1|felucca|composite|sinco|usb-midi/i;
+  const askable = (name, allowed) => NAME_RE.test(name || "") || USUAL_RE.test(name || "") || allowed.includes(name);
+  // the input port names the page does not ask by itself, that have an output of the same name (for Try)
+  function others(access, allowed = []) {
+    const outs = new Set([...access.outputs.values()].filter((p) => p.state !== "disconnected").map((p) => p.name));
+    return [...new Set([...access.inputs.values()].filter((p) => p.state !== "disconnected" && outs.has(p.name) &&
+      !askable(p.name, allowed)).map((p) => p.name))];
+  }
+  async function find(access, makeLink, allowed = [], only = null) {
+    const ins = [...access.inputs.values()].filter((p) => p.state !== "disconnected" &&
+      (only != null ? p.name === only : askable(p.name, allowed)));
+    ins.sort((a, b) => NAME_RE.test(b.name) - NAME_RE.test(a.name));
+    const outs = [...access.outputs.values()];
+    const base = (s) => (s || "").replace(/\s+\d+$/, "");
+    let other = null;
+    for (const input of ins) {
+      const same = outs.filter((o) => base(o.name) === base(input.name));
+      const output = outs.find((o) => o.name === input.name) || (same.length === 1 ? same[0] : null) || (outs.length === 1 ? outs[0] : null);
+      if (!output) continue;
+      try { await input.open(); await output.open(); } catch (_) { continue; }
+      const link = makeLink(input, output);
+      const id = await handshake(link);
+      if (id && id.startsWith(ID)) return { link, id, name: input.name };
+      if (id) other = other || id;
+      link.close();
+    }
+    if (other) throw fail("model", `The FM-1 runs other firmware (${other}), not ${NAME}. Install ${NAME} first.`);
+    throw fail("notfound", `${NAME} not found. Plug the FM-1 in with a USB data cable, close other apps that use its MIDI, and try again.`);
+  }
+
+  // the device's backup frames until its end frame -> {image, flags} (checked)
+  async function backup(link, onProgress = () => {}) {
+    link.drain();
+    link.send(frame(BU_REQ, MAGIC));
+    const got = []; let last = Date.now(), first = true;
+    for (;;) {
+      const pkt = await link.read(DELAY.poll);
+      if (!pkt) {
+        if (link.lost) throw fail("lost", "The FM-1 was disconnected. Plug it in and press Back up again.");
+        if (Date.now() - last > (first ? DELAY.first : DELAY.idle)) {
+          throw fail("stopped", first ? `${NAME} didn't answer. If it's an older ${NAME} without backup, update it on the Install page.`
+                                      : `${NAME} stopped sending. Press Back up again.`);
+        }
+        continue;
+      }
+      const f = parseFrame(pkt);
+      if (!f) continue;
+      last = Date.now();
+      if (f.cmd === BU_REQ && f.body.length >= 4) {
+        first = false;
+        if (u32(f.body, 0) !== got.length) throw fail("lost", "A piece of the backup went missing on the way. Press Back up again.");
+        for (let i = 4; i < f.body.length; i++) got.push(f.body[i]);
+        onProgress(got.length);
+      } else if (f.cmd === BU_END && f.body.length >= 10) {
+        const n = u32(f.body, 0), crc = u32(f.body, 4), status = f.body[8], flags = f.body[9];
+        if (status) throw fail("flash", `${NAME} could not read its memory (status ${status}). Try again.`);
+        const image = Uint8Array.from(got);
+        if (n !== image.length || crc !== crc32(image)) throw fail("lost", "The backup arrived damaged. Press Back up again.");
+        try { parse(image); } catch (e) { throw fail("lost", `The backup arrived damaged (${e.message}). Press Back up again.`); }
+        return { image, flags };
+      }
+    }
+  }
+
+  // send a checked backup image: answer the FM-1's reads until it reports -> 0 restored, else its code (PLAYING, DECLINED, ...)
+  async function restore(link, image, onEvent = () => {}) {
+    parse(image);                                                  // (the page checked it already: never send a bad one)
+    link.drain();
+    link.send(frame(RS_REQ, [...le32(image.length), ...le32(crc32(image))]));
+    let last = Date.now(), idle = DELAY.first, asked = 0;
+    for (;;) {
+      const pkt = await link.read(DELAY.poll);
+      if (!pkt) {
+        if (link.lost) throw fail("lost", `The FM-1 was disconnected. Nothing changed, unless ${NAME} said RESTORED.`);
+        if (Date.now() - last > idle) {
+          throw fail("stopped", asked ? `${NAME} stopped asking for the file. Nothing changed.`
+                                      : `${NAME} didn't answer. If it's an older ${NAME} without restore, update it on the Install page.`);
+        }
+        continue;
+      }
+      const r = parseRequest(pkt);
+      if (!r) continue;
+      last = Date.now(); idle = DELAY.idle; asked++;
+      const top = (r.addr & 0xFF000000) >>> 0;
+      if (top === OK_ADDR || top === FAIL_ADDR || top === ASK_ADDR) {
+        link.send(response(r.addr, [0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0], r.fl));   // "success\0"
+        if (r.addr === ASK_ADDR) { idle = DELAY.ask; onEvent("ask"); continue; }
+        return r.addr === OK_ADDR ? 0 : (r.addr & 0xFFFF) || 99;
+      }
+      if (r.len > MAXDATA || r.addr >= image.length) throw fail("badreq", `${NAME} asked for a part outside the file (${r.addr.toString(16)}+${r.len}). Nothing changed.`);
+      const data = Array.from(image.subarray(r.addr, r.addr + r.len));
+      while (data.length < r.len) data.push(0);
+      if (!link.send(response(r.addr, data, r.fl))) throw fail("lost", "The FM-1 was disconnected. Nothing changed.");
+      onEvent("progress", Math.min(r.addr + r.len, image.length) * 100 / image.length);
+    }
+  }
+
+  return { HS_QUERY, RS_REQ, BU_REQ, BU_END, OK_ADDR, ASK_ADDR, FAIL_ADDR, VERSION, PLAYING, DECLINED, ID, NAME, MAGIC, DELAY, ERRORS,
+           pack7, unpack7, crc32, frame, parseFrame, response, parseRequest, parseIdentity, parse, split, join, summary, find, others, backup,
+           restore };
+})();
+
+const EXTRAS = (() => {
+// SPDX-License-Identifier: MPL-2.0
+// Bloomy's user sample bank in the browser: tools/loom_samples.py and tools/sampleio.py (its numpy path) as plain
+// functions, so the samples page (app/web/samples/index.html) builds the bank the command line builds: the same
+// layout and header byte for byte, the same sound within a rounding (numpy sums a convolution in its own order).
+// tests/host/samples_web.mjs checks it against loom_samples.py. Copyright (C) 2026 Charles Vestal.
+//
+// Keep the order of operations of sampleio.py when touching these.
+
+const RATES = [11025, 16000, 22050, 32000];
+const AUTO = [22050, 16000, 11025];
+const BLK = 128, BLK_V2 = 64;          // a checkpoint every BLK samples: version 3 banks (0.8); 64 in version 2
+const REGIONS = [[0xC1000, 0x1B000], [0xE5000, 0x17000], [0x93000, 0x4000]];
+const XDATA = [1, 2], REC_MARK = 0xF06;
+const BANK_SIZE = REGIONS.reduce((a, r) => a + r[1], 0);
+const BANK_HDR = 2048, BANK_MAX_DATA = BANK_SIZE - BANK_HDR, BANK_N = 32, BANK_VER = 3;
+// since 0.8 the factory set (the kits' drums, the instruments, the sweep, the vinyl) lives in the bank too: 12 entries
+// marked E_FACTORY (an entry's flags, byte 33), which its factory rows play and which are no user slots (sample.h)
+const NFENT = 12, NENT = BANK_N + NFENT, E_FACTORY = 0x01;
+const ENT0 = 64, ENT = 40, BANK_MAGIC = 0x504D534C, NAME_LEN = 12, BARS_MAX = 16;
+const LOOP_ROOT = 53;                  // a loop's slice 1: F3, the lowest key
+const HDR_USED = ENT0 + NENT * ENT;    // the header's bytes the FM-1 keeps (1824)
+const PART = 320, NPART = Math.ceil(HDR_USED / PART);
+const READ_MAX = 224;                  // samples.c SB_READ_MAX
+
+// IMA ADPCM's step sizes and index changes: the standard's tables (IMA Digital Audio Focus and Technical Working
+// Groups, "Recommended Practices for Enhancing Digital Audio Compatibility in Multimedia Systems", 1992)
+const IMA_STEP = [
+  7, 8, 9, 10, 11, 12, 13, 14, 16, 17,
+  19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
+  50, 55, 60, 66, 73, 80, 88, 97, 107, 118,
+  130, 143, 157, 173, 190, 209, 230, 253, 279, 307,
+  337, 371, 408, 449, 494, 544, 598, 658, 724, 796,
+  876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066,
+  2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358,
+  5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899,
+  15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767];
+const IMA_IDX = [...Array(4).fill(-1), 2, 4, 6, 8];   // by a code's magnitude bits (0..7)
+const IMA_BITS = [[4, 0], [2, 1], [1, 2]];            // a code's magnitude bits and the shift of the step each stands for
+
+// the decoder's state after one code: [pred, idx] (sampleio._ima_next)
+function imaNext(pred, idx, code) {
+  const step = IMA_STEP[idx];
+  let d = step >> 3;
+  for (const [bit, shift] of IMA_BITS) if (code & bit) d += step >> shift;
+  pred = Math.max(-32768, Math.min(32767, code & 8 ? pred - d : pred + d));
+  return [pred, Math.max(0, Math.min(88, idx + IMA_IDX[code & 7]))];
+}
+
+// ---- WAV in (sampleio.read_any_wav): -> {rate, x: mono floats, loop: [start, end] or null}
+function readWav(buf) {
+  const d = new DataView(buf.buffer || buf, buf.byteOffset || 0, buf.byteLength);
+  const tag4 = (o) => String.fromCharCode(d.getUint8(o), d.getUint8(o + 1), d.getUint8(o + 2), d.getUint8(o + 3));
+  if (d.byteLength < 12 || tag4(0) !== "RIFF" || tag4(8) !== "WAVE") throw new Error("not a WAV file");
+  const ch = {};
+  for (let i = 12; i + 8 <= d.byteLength;) {
+    const id = tag4(i), n = d.getUint32(i + 4, true);
+    if (!(id in ch)) ch[id] = [i + 8, n];
+    i += 8 + n + (n & 1);
+  }
+  if (!ch["fmt "]) throw new Error("WAV without a fmt chunk");
+  const fo = ch["fmt "][0];
+  let tag = d.getUint16(fo, true);
+  const nch = d.getUint16(fo + 2, true), sr = d.getUint32(fo + 4, true), bits = d.getUint16(fo + 14, true);
+  if (tag === 0xFFFE) tag = d.getUint16(fo + 24, true);
+  const bps = bits >> 3;
+  if ((tag !== 1 && tag !== 3) || !bps || !nch) throw new Error(`unsupported WAV (tag ${tag}, ${bits} bit)`);
+  const [o, n] = ch.data || [0, 0];
+  const frame = bps * nch, nfr = Math.floor(Math.min(n, d.byteLength - o) / frame);
+  const val = (p) => {
+    if (tag === 3) return bps === 4 ? d.getFloat32(p, true) : d.getFloat64(p, true);
+    if (bps === 2) return d.getInt16(p, true) / 32768;
+    if (bps === 3) return ((d.getUint8(p) << 8 | d.getUint8(p + 1) << 16 | d.getUint8(p + 2) << 24) >> 0) / 2147483648;
+    if (bps === 4) return d.getInt32(p, true) / 2147483648;
+    return (d.getUint8(p) - 128) / 128;
+  };
+  const x = new Float64Array(nfr);
+  for (let f = 0; f < nfr; f++) {
+    const p = o + f * frame;
+    let acc = 0;                                  // sum(v[f:f + nch]) / nch, from 0, left to right
+    for (let c = 0; c < nch; c++) acc += val(p + c * bps);
+    x[f] = nch > 1 ? acc / nch : acc;
+  }
+  let loop = null;
+  if (ch.smpl) {
+    const so = ch.smpl[0];
+    if (so + 52 <= d.byteLength && d.getUint32(so + 28, true)) loop = [d.getUint32(so + 44, true), d.getUint32(so + 48, true)];
+  }
+  return { rate: sr, x, loop };
+}
+
+// numpy.convolve(a, h, mode="same"): length max(N, M), from (min(N, M) - 1) // 2 of the full convolution
+function convolveSame(a, h) {
+  const N = a.length, M = h.length, L = Math.max(N, M), off = (Math.min(N, M) - 1) >> 1;
+  const out = new Float64Array(L);
+  for (let i = 0; i < L; i++) {
+    const k = i + off;                            // full[k] = sum_j a[k - j] h[j]
+    let acc = 0, j0 = Math.max(0, k - N + 1), j1 = Math.min(M - 1, k);
+    for (let j = j0; j <= j1; j++) acc += a[k - j] * h[j];
+    out[i] = acc;
+  }
+  return out;
+}
+
+function sinc(x) { if (x === 0) return 1.0; const y = Math.PI * x; return Math.sin(y) / y; }
+function blackman(M) {                            // numpy.blackman
+  const w = new Float64Array(M);
+  if (M === 1) { w[0] = 1; return w; }
+  for (let i = 0; i < M; i++) {
+    const n = 1 - M + 2 * i;
+    w[i] = 0.42 + 0.5 * Math.cos(Math.PI * n / (M - 1)) + 0.08 * Math.cos(2.0 * Math.PI * n / (M - 1));
+  }
+  return w;
+}
+
+// sampleio.resample (numpy): down, a windowed-sinc low-pass at 90 % of the new half rate; then linear interpolation
+function resample(x, sr, to) {
+  if (sr === to) return Float64Array.from(x);
+  let a = Float64Array.from(x);
+  if (a.length <= 1) return new Float64Array(0);
+  if (to < sr) {
+    const fc = 0.45 * to / sr, half = Math.ceil(8.0 / fc), M = 2 * half + 1, w = blackman(M), h = new Float64Array(M);
+    let sum = 0;
+    for (let i = 0; i < M; i++) { const t = i - half; h[i] = 2.0 * fc * sinc(2.0 * fc * t) * w[i]; }
+    for (let i = 0; i < M; i++) sum += h[i];
+    for (let i = 0; i < M; i++) h[i] /= sum;
+    a = convolveSame(a, h);
+  }
+  const n = Math.ceil((a.length - 1) * to / sr), step = sr / to, out = new Float64Array(n), last = a.length - 1;
+  for (let i = 0; i < n; i++) {                   // numpy.interp on 0, 1, 2 ...
+    const p = i * step, j = Math.floor(p);
+    out[i] = j >= last ? a[last] : (a[j + 1] - a[j]) * (p - j) + a[j];
+  }
+  return out;
+}
+
+// the pre-emphasis the playback's linear interpolation takes back off (sampleio.EMPHASIS)
+const EMPHASIS = [0.0517, -0.21, 1.3362, -0.21, 0.0517].map((v) => v / 1.0196);
+function emphasis(x) { return convolveSame(Float64Array.from(x), EMPHASIS); }
+
+function roundHalfEven(v) {                       // Python's round()
+  const f = Math.floor(v), d = v - f;
+  if (d > 0.5) return f + 1;
+  if (d < 0.5) return f;
+  return f % 2 === 0 ? f : f + 1;
+}
+
+// sampleio.to_int16: the peak normalised to 30000
+function toInt16(x, peakTo = 30000) {
+  let pk = 1e-9;
+  for (const v of x) { const a = Math.abs(v); if (a > pk) pk = a; }
+  const out = new Int16Array(x.length);
+  for (let i = 0; i < x.length; i++) out[i] = Math.max(-32768, Math.min(32767, roundHalfEven(x[i] / pk * peakTo)));
+  return out;
+}
+
+// sampleio.note_from_name: "C4" / "F#3" / "Bb2" in a name, C4 = 60
+function noteFromName(name, def = 60) {
+  const m = /(?<![A-Za-z])([A-G])([#b]?)(-?\d)(?!\d)/.exec(name);
+  if (!m) return def;
+  const pc = "C D EF G A B".indexOf(m[1]) + ({ "#": 1, b: -1, "": 0 })[m[2]];
+  return Math.max(0, Math.min(127, (parseInt(m[3], 10) + 1) * 12 + pc));
+}
+
+// sampleio.clean_name: lower case, printable, at most 11 characters
+function cleanName(name) {
+  const s = name.toLowerCase().replace(/_/g, " ").replace(/[^a-z0-9 _.-]/g, "").trim();
+  return (s || "sample").slice(0, NAME_LEN - 1);
+}
+
+const NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+function noteName(n) { return NOTE[n % 12] + (Math.floor(n / 12) - 1); }
+
+// sampleio.ima_encode: -> {adpcm, ck: Uint32Array of the decoder's state before every BLK-th sample}
+function imaEncode(s) {
+  let pred = 0, idx = 0;
+  const adpcm = new Uint8Array(((s.length + 1) >> 1)), ck = new Uint32Array(Math.ceil(s.length / BLK));
+  s.forEach((x, n) => {
+    if (n % BLK === 0) ck[n / BLK] = ((pred & 0xFFFF) | idx << 16) >>> 0;
+    const step = IMA_STEP[idx];
+    let left = Math.abs(x - pred), code = x < pred ? 8 : 0;
+    for (const [bit, shift] of IMA_BITS)               // the magnitude, a bit at a time from the largest share
+      if (left >= step >> shift) { code |= bit; left -= step >> shift; }
+    adpcm[n >> 1] |= code << 4 * (n & 1);
+    [pred, idx] = imaNext(pred, idx, code);
+  });
+  return { adpcm, ck };
+}
+
+// the firmware's decoder (dsp/sample.c): for the pictures of samples read back
+function imaDecode(b, n) {
+  const out = new Int16Array(n);
+  let st = [0, 0];
+  for (let i = 0; i < n; i++) {
+    st = imaNext(st[0], st[1], b[i >> 1] >> 4 * (i & 1) & 15);
+    out[i] = st[0];
+  }
+  return out;
+}
+
+function sampleBytes(n) { return Math.ceil(n / BLK) * 4 + Math.floor((Math.floor((n + 1) / 2) + 3) / 4) * 4; }
+function bytesPerSecond(rate) { return rate * (0.5 + 4.0 / BLK); }
+
+// a file's samples at a rate, ready for the bank (loom_samples.at_rate): {s: Int16Array, loop}
+function atRate(x, sr, loop, rate) {
+  const s = toInt16(emphasis(resample(x, sr, rate)));
+  const lp = loop ? [Math.trunc(loop[0] * rate / sr), Math.trunc((loop[1] + 1) * rate / sr)] : null;
+  return { s, loop: lp };
+}
+function lengthAt(nx, sr, rate) { return Math.trunc(nx * rate / sr); }
+
+// ---- the bank's layout (sampleio.user_bank)
+function regionStarts() { const out = []; let v = 0; for (const [, n] of REGIONS) { out.push(v); v += n; } return out; }
+const STARTS = regionStarts();
+function regionOf(v) {
+  for (let r = 0; r < REGIONS.length; r++) if (STARTS[r] <= v && v < STARTS[r] + REGIONS[r][1]) return r;
+  return REGIONS.length;
+}
+
+class TooLong extends Error {}
+
+function place(blobs, pad) {
+  const starts = [...STARTS, BANK_SIZE], out = [];
+  let v = BANK_HDR;
+  for (let k = 0; k < blobs.length; k++) {
+    const [ckb, adpb] = blobs[k];
+    v = (v + pad[k] + 3) & ~3;
+    let a;
+    for (;;) {
+      const r = regionOf(v);
+      if (r >= REGIONS.length) throw new TooLong("too long");
+      if (v + ckb.length > starts[r + 1]) { v = starts[r + 1]; continue; }
+      a = v + ckb.length;
+      const ra = a < BANK_SIZE ? regionOf(a) : REGIONS.length;
+      if (ra >= REGIONS.length || a + adpb.length > starts[Math.min(ra + 2, REGIONS.length)]) {
+        if (ra + 1 >= REGIONS.length) throw new TooLong("too long");
+        v = starts[ra + 1];
+        continue;
+      }
+      break;
+    }
+    out.push([v, a]);
+    v = a + adpb.length;
+  }
+  if (v > BANK_SIZE) throw new TooLong("too long");
+  return { where: out, end: v };
+}
+
+function marks(img, end) {
+  const out = [];
+  for (const r of XDATA)
+    for (let sec = 0; sec < REGIONS[r][1]; sec += 0x1000) {
+      const v = STARTS[r] + sec + REC_MARK;
+      if (v + 2 <= end && img[v] === 0x41 && img[v + 1] === 0x54) out.push(v);
+    }
+  return out;
+}
+
+let CRC_T = null;
+function crc32(b) {                        // zlib.crc32
+  if (!CRC_T) {
+    CRC_T = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      CRC_T[n] = c >>> 0;
+    }
+  }
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+// a sample for the bank: {name, n, root, loop: [ls, le] or null, bars, rate} and either s (Int16Array: encoded here)
+// or ckb + adpcm (as stored: a sample read back, kept as it is)
+function blobOf(smp) {
+  if (smp.adpcm) return [smp.ckb, smp.adpcm];
+  const { adpcm, ck } = imaEncode(smp.s);
+  const ckb = new Uint8Array(ck.length * 4), dv = new DataView(ckb.buffer);
+  ck.forEach((c, i) => dv.setUint32(i * 4, c, true));
+  return [ckb, adpcm];
+}
+
+// sampleio.user_bank: -> the bank's image (header + data, without the padding to BANK_SIZE); throws "too long ..."
+const isFactory = (smp) => !!((smp.flags || 0) & E_FACTORY);
+function userBank(samples) {
+  const own = samples.filter((smp) => !isFactory(smp)).length;
+  if (samples.length < 1 || own > BANK_N || samples.length - own > NFENT)
+    throw new Error(`1..${BANK_N} samples in the bank (and the factory set's ${NFENT})`);
+  const blobs = [], meta = [];
+  for (const smp of samples) {
+    const n = smp.adpcm ? smp.n : smp.s.length;
+    if (!(smp.bars >= 0 && smp.bars <= BARS_MAX)) throw new Error(`${smp.name}: ${smp.bars} bars (0..${BARS_MAX})`);
+    if (!(smp.rate >= 4000 && smp.rate <= 48000)) throw new Error(`${smp.name}: ${smp.rate} Hz (4000..48000)`);
+    if (!n) throw new Error(`${smp.name}: no audio`);
+    blobs.push(blobOf(smp));
+    let [ls, le] = smp.loop || [0, 0];
+    le = Math.min(le, n);
+    if (le <= ls) ls = le = 0;
+    meta.push({ nm: cleanName(smp.name), n, ls, le, root: Math.max(0, Math.min(127, smp.root)), flags: smp.flags || 0,
+      bars: smp.bars, rate: smp.rate });
+  }
+  const pad = new Array(blobs.length).fill(0);
+  let where, end, img = null;
+  for (let t = 0; ; t++) {
+    if (t >= 4096) throw new Error("could not keep the update record's mark out of the bank");
+    try { ({ where, end } = place(blobs, pad)); } catch (e) {
+      if (e instanceof TooLong) {
+        const used = blobs.reduce((a, [c, d]) => a + c.length + d.length, 0);
+        throw new TooLong(`too long: ${used} B, the bank holds ${BANK_MAX_DATA} B`);
+      }
+      throw e;
+    }
+    img = new Uint8Array(end).fill(0xFF);
+    blobs.forEach(([ckb, adpb], k) => { img.set(ckb, where[k][0]); img.set(adpb, where[k][1]); });
+    const mk = marks(img, end);
+    if (!mk.length) break;
+    const k = where.findIndex(([c, a], i) => c <= mk[0] && mk[0] < a + blobs[i][1].length);
+    if (k < 0) throw new Error("an update record's mark outside the samples");
+    pad[k] += 4;
+  }
+  const data = img.subarray(BANK_HDR);
+  const hdr = new Uint8Array(BANK_HDR), v = new DataView(hdr.buffer);
+  v.setUint32(0, BANK_MAGIC, true);
+  v.setUint16(4, BANK_VER, true);
+  hdr[6] = meta.length;
+  hdr[7] = 0;
+  v.setUint32(8, data.length, true);
+  v.setUint32(12, crc32(data), true);
+  v.setUint32(16, BANK_SIZE, true);
+  meta.forEach((m, k) => {
+    const o = ENT0 + k * ENT;
+    for (let i = 0; i < m.nm.length; i++) hdr[o + i] = m.nm.charCodeAt(i);
+    v.setUint32(o + 12, where[k][1], true);         // the ADPCM, then the checkpoints
+    v.setUint32(o + 16, where[k][0], true);
+    v.setUint32(o + 20, m.n, true);
+    v.setUint32(o + 24, m.ls, true);
+    v.setUint32(o + 28, m.le, true);
+    hdr[o + 32] = m.root;
+    hdr[o + 33] = m.flags;
+    hdr[o + 34] = m.bars;
+    v.setUint16(o + 36, m.rate, true);
+  });
+  const out = new Uint8Array(BANK_HDR + data.length);
+  out.set(hdr);
+  out.set(data, BANK_HDR);
+  return out;
+}
+
+// a bank's header -> its samples' entries (null: not a bank)
+function parseHeader(hdr) {
+  const v = new DataView(hdr.buffer, hdr.byteOffset, hdr.byteLength);
+  const ver = hdr.length >= ENT0 ? v.getUint16(4, true) : 0;
+  if (hdr.length < ENT0 || v.getUint32(0, true) !== BANK_MAGIC || (ver !== 2 && ver !== 3)) return null;
+  const count = hdr[6], out = [];
+  if (count > NENT || hdr.length < ENT0 + count * ENT) return null;
+  for (let k = 0; k < count; k++) {
+    const o = ENT0 + k * ENT;
+    let name = "";
+    for (let i = 0; i < NAME_LEN && hdr[o + i]; i++) name += String.fromCharCode(hdr[o + i]);
+    out.push({ name, adpOff: v.getUint32(o + 12, true), ckOff: v.getUint32(o + 16, true), n: v.getUint32(o + 20, true),
+      ls: v.getUint32(o + 24, true), le: v.getUint32(o + 28, true), root: hdr[o + 32], flags: hdr[o + 33],
+      bars: hdr[o + 34], rate: v.getUint16(o + 36, true) });
+  }
+  return { count, ver, dataLen: v.getUint32(8, true), crc: v.getUint32(12, true), entries: out };
+}
+
+// loom_samples.pack7: groups of up to 7 bytes, each preceded by their top bits; and back
+function pack7(b) {
+  const out = [];
+  for (let i = 0; i < b.length; i += 7) {
+    let m = 0;
+    const g = b.subarray ? b.subarray(i, i + 7) : b.slice(i, i + 7);
+    g.forEach((x, j) => { m |= ((x >> 7) & 1) << j; });
+    out.push(m);
+    for (const x of g) out.push(x & 0x7F);
+  }
+  return out;
+}
+function unpack7(a) {
+  const out = [];
+  for (let i = 0; i < a.length;) {
+    const m = a[i++];
+    for (let j = 0; j < 7 && i < a.length; j++) out.push(a[i++] | ((m >> j) & 1) << 7);
+  }
+  return new Uint8Array(out);
+}
+
+// loom_samples.frames: the upload's frames, [command, args, timeout ms, what]
+function* frames(image) {
+  yield [11, [0], 10000, "begin"];
+  for (let off = BANK_HDR; off < image.length; off += 256)
+    yield [12, [0, off & 0x7F, (off >> 7) & 0x7F, (off >> 14) & 0x7F, ...pack7(image.subarray(off, off + 256))], 5000, off];
+  for (let part = 0; part < NPART; part++)
+    yield [16, [0, part, ...pack7(image.subarray(0, BANK_HDR).subarray(part * PART, (part + 1) * PART))], 3000, `header part ${part}`];
+  yield [13, [0], 20000, "end"];
+}
+
+// loom_samples.build: the bank from items in order, each either kept ({name, n, root, loop, bars, rate, ckb, adpcm}:
+// read back) or new ({name, x, sr, loop (the file's), root, bars, rate: its own or null}); rate: for the new ones that
+// did not choose (null: auto, the highest of AUTO at which all fits). -> {img, chose}; throws TooLong.
+// cache (a Map) keeps each new item's samples at a rate between calls.
+function build(items, rate = null, cache = new Map()) {
+  const own = items.filter((it) => !isFactory(it)).length;
+  if (items.length < 1 || own > BANK_N) throw new Error(`1..${BANK_N} samples in the bank`);
+  const tries = rate ? [rate] : AUTO;
+  for (const r of tries) {
+    const est = items.reduce((a, it) => a + sampleBytes(it.adpcm ? it.n : it.s ? it.s.length : lengthAt(it.x.length, it.sr, it.rate || r)), 0);
+    if (est > BANK_MAX_DATA) continue;
+    const smps = items.map((it) => {
+      if (it.adpcm || it.s) return it;            // (kept as stored; or already at its rate: makeRoom's)
+      const rr = it.rate || r, key = rr;
+      let c = cache.get(it);
+      if (!c) cache.set(it, c = new Map());
+      if (!c.has(key)) c.set(key, atRate(it.x, it.sr, it.loop, rr));
+      const { s, loop } = c.get(key);
+      return { name: it.name, s, root: it.root, loop, bars: it.bars, rate: rr };
+    });
+    try { return { img: userBank(smps), chose: r }; } catch (e) { if (!(e instanceof TooLong)) throw e; }
+  }
+  const last = tries[tries.length - 1];
+  const need = items.reduce((a, it) => a + sampleBytes(it.adpcm ? it.n : it.s ? it.s.length : lengthAt(it.x.length, it.sr, it.rate || last)), 0);
+  throw new TooLong(`too long: ${(need / 1024).toFixed(1)} KB at ${last} Hz, the bank holds ${(BANK_MAX_DATA / 1024).toFixed(1)} KB`);
+}
+
+// the samples of a bank image as kept items (a bank read back: each sample's checkpoints and ADPCM as stored)
+function keptOf(img) {
+  const h = parseHeader(img.subarray(0, Math.min(BANK_HDR, img.length)));
+  if (!h) return [];
+  const blk = h.ver === 2 ? BLK_V2 : BLK;
+  return h.entries.map((e) => {
+    let ckb = img.slice(e.ckOff, e.ckOff + Math.ceil(e.n / blk) * 4);
+    if (blk !== BLK) {                        // a version 2 bank's: every other checkpoint (the same states, none lost)
+      const step = BLK / blk, out = new Uint8Array(Math.ceil(e.n / BLK) * 4);
+      for (let i = 0; i < out.length / 4; i++) out.set(ckb.subarray(i * step * 4, i * step * 4 + 4), i * 4);
+      ckb = out;
+    }
+    return { name: e.name, n: e.n, root: e.root, loop: e.le > e.ls ? [e.ls, e.le] : null, bars: e.bars, rate: e.rate,
+      flags: e.flags, ckb, adpcm: img.slice(e.adpOff, e.adpOff + ((e.n + 1) >> 1)) };
+  });
+}
+
+// the factory set (tools/gen_samples.py --factory-bank: factory.bin beside the page) as kept items, ready to add to a
+// bank after its samples: the same bytes the firmware built in until 0.8
+function factoryOf(img) { return keptOf(img).filter(isFactory); }
+// the factory set's items missing from a bank's items (by name, among the factory set's entries)
+function factoryMissing(items, factory) {
+  return factory.filter((f) => !items.some((it) => isFactory(it) && it.name === f.name));
+}
+
+// ---- the FM-1 over USB-MIDI (app/samples.c: F0 7D 46 4C cmd ... F7): shared by the samples page and the installer
+const HDR = [0x7D, 0x46, 0x4C];
+const RC = { 1: "a size or offset", 2: "erasing", 3: "writing", 4: "the bank not begun", 5: "the header",
+  6: "the data's check", 7: "no samples", 8: "a reserved mark" };
+class Link {
+  constructor(input, output) {
+    this.input = input; this.output = output; this.wait = null;
+    input.onmidimessage = (ev) => {
+      const d = ev.data;
+      if (d[0] !== 0xF0 || d[1] !== HDR[0] || d[2] !== HDR[1] || d[3] !== HDR[2] || !this.wait || d[4] !== this.wait.cmd) return;
+      const w = this.wait;
+      this.wait = null;
+      clearTimeout(w.timer);
+      w.resolve([...d.slice(5, d.length - 1)]);
+    };
+  }
+  req(cmd, args, ms = 3000) {
+    return new Promise((resolve, reject) => {
+      this.wait = { cmd, resolve, timer: setTimeout(() => { this.wait = null; reject(new Error("The FM-1 stopped answering.")); }, ms) };
+      this.output.send([0xF0, ...HDR, cmd, ...args, 0xF7]);
+    });
+  }
+  async retry(cmd, args, ms, tries = 3) {
+    for (let k = 1; ; k++) { try { return await this.req(cmd, args, ms); } catch (e) { if (k >= tries) throw e; } }
+  }
+  close() { this.input.onmidimessage = null; }
+}
+// the FM-1 running Bloomy among midi's ports (it answers SB_SINFO); null: none
+async function findLink(midi, wait = 1000) {
+  // the names the backup page and the installer take (Windows may call the port "USB-MIDI", or keep an earlier name,
+  // and names the two ends apart: "Bloomy FM-1" in, "MIDIOUT2 (Bloomy FM-1)" out); never probe other gear
+  const outs = [...midi.outputs.values()].filter((o) => o.state !== "disconnected");
+  const ins = [...midi.inputs.values()].filter((i) => i.state !== "disconnected" &&
+    /bloomy|loom|fm-?1|felucca|composite|sinco|usb-midi/i.test(i.name || ""))
+    .sort((a, b) => /bloomy|loom/i.test(b.name) - /bloomy|loom/i.test(a.name));
+  const base = (s) => (s || "").replace(/\s+\d+$/, "").replace(/^MIDI(?:IN|OUT)\d*\s*\((.*)\)$/i, "$1");
+  for (const input of ins) {
+    const same = outs.filter((o) => base(o.name) === base(input.name));
+    const output = outs.find((o) => o.name === input.name) || (same.length === 1 ? same[0] : null) ||
+      (outs.length === 1 ? outs[0] : null);
+    if (!output) continue;
+    try { await input.open(); await output.open(); } catch (_) { continue; }   // another app holds it: the next
+    const l = new Link(input, output);
+    try { await l.retry(25, [], wait); return l; } catch (_) { l.close(); }
+  }
+  return null;
+}
+// SMP_READ, 224 bytes a request
+async function readBytes(link, off, n, onPart) {
+  const out = new Uint8Array(n);
+  for (let at = 0; at < n;) {
+    const want = Math.min(READ_MAX, n - at), adr = off + at;
+    const r = await link.retry(17, [0, adr & 0x7F, (adr >> 7) & 0x7F, (adr >> 14) & 0x7F, want & 0x7F, want >> 7], 3000);
+    if (r[4]) throw new Error(r[4] === 4 ? "The FM-1 is in the middle of writing its samples." : "The FM-1 couldn't read its samples.");
+    const b = unpack7(r.slice(5));
+    if (b.length < want) throw new Error("short read");
+    out.set(b.subarray(0, want), at);
+    at += want;
+    if (onPart) onPart(at / n);
+  }
+  return out;
+}
+// the bank's image as the FM-1 holds it (header + data), or null when it holds none; throws on an old Bloomy
+async function readBank(link, onPart) {
+  const info = await link.req(15, [0]);
+  if (info[0] !== 2) throw new Error("This Bloomy is too old for this page. Update it from the install page, then connect again.");
+  if (!info[5]) return null;
+  let hdr;
+  try { hdr = await readBytes(link, 0, HDR_USED); } catch (e) {
+    if (/stopped answering/.test(e.message))
+      throw new Error("This Bloomy can't send its samples back to the page. Update it from the install page (0.5-beta or later), then connect again.");
+    throw e;
+  }
+  const h = parseHeader(hdr);
+  if (!h || !h.count) return null;
+  const data = await readBytes(link, BANK_HDR, h.dataLen, onPart);
+  const img = new Uint8Array(BANK_HDR + h.dataLen);
+  img.set(hdr);
+  img.set(data, BANK_HDR);
+  return img;
+}
+// the bank sent (img null: erased); onPart(done fraction)
+async function sendBank(link, img, onPart) {
+  if (!img) {
+    const r = await link.req(14, [0], 60000);
+    if (r[1]) throw new Error(`The FM-1 couldn't erase its samples (${RC[r[1]] || r[1]}).`);
+    return;
+  }
+  const total = img.length - BANK_HDR;
+  for (const [cmd, args, ms, what] of frames(img)) {
+    let r;
+    for (let k = 1; ; k++) {                         // a write again when its answer is lost (the same bytes)
+      try { r = await link.req(cmd, args, ms); break; } catch (e) { if (cmd !== 12 || k >= 4) throw e; }
+    }
+    const rc = r.length ? r[r.length - 1] : 99;
+    if (rc) throw new Error(`The FM-1 didn't take the samples (${RC[rc] || rc}${cmd === 12 ? ` at ${what}` : ""}).`);
+    if (cmd === 12 && onPart) onPart((Math.min(what + 256, img.length) - BANK_HDR) / total);
+  }
+}
+
+// ---- room for the factory set (0.8): a bank's items and the factory set's missing ones, in that order; if they do
+// not fit, the user's samples above a rate put at it (decoded, resampled, encoded again: one generation of ADPCM
+// more; their level kept), the highest of AUTO that makes it fit. -> {items, cap (0: nothing changed), changed: the
+// names resampled, need: bytes} or null when even 11025 Hz is not enough (then some must go, or some of the factory set)
+const itemBytes = (it) => sampleBytes(it.adpcm ? it.n : it.s ? it.s.length : 0);
+function atRateKept(it, rate) {               // a kept item at a lower rate: a new item, encoded at build
+  const x = Float64Array.from(imaDecode(it.adpcm, it.n));
+  const y = resample(x, it.rate, rate), s = new Int16Array(y.length);
+  for (let i = 0; i < y.length; i++) s[i] = Math.max(-32768, Math.min(32767, Math.round(y[i])));
+  const loop = it.loop ? [Math.trunc(it.loop[0] * rate / it.rate), Math.min(s.length, Math.trunc(it.loop[1] * rate / it.rate))] : null;
+  return { name: it.name, s, root: it.root, loop, bars: it.bars, rate, flags: it.flags || 0 };
+}
+function makeRoom(items, factory) {
+  const missing = factoryMissing(items, factory), all = [...items, ...missing];
+  const need = all.reduce((a, it) => a + itemBytes(it), 0);
+  const fits = (list) => { try { userBank(list); return true; } catch (e) { if (e instanceof TooLong) return false; throw e; } };
+  if (fits(all)) return { items: all, cap: 0, changed: [], need };   // (the layout's own answer: its seams counted)
+  for (const cap of AUTO) {
+    const changed = [];
+    const next = all.map((it) => {
+      if (isFactory(it) || !it.adpcm || it.rate <= cap) return it;
+      changed.push(it.name);
+      return atRateKept(it, cap);
+    });
+    if (changed.length && fits(next)) return { items: next, cap, changed, need };
+  }
+  return null;
+}
+
+// SPDX-License-Identifier: MPL-2.0
+// Bloomy's sample bank as a section of the backup file (fm1-base's web/backup page, EXTRAS; tag "LSMP"): read back
+// through SMP_READ (17), written as the samples page writes it (BEGIN 11, WRITE 12, HDR 16, END 13; ERASE 14 for a
+// bank with no samples), app/samples.c. The section is the bank's image as tools/loom_samples.py backup / extract
+// make it (the 2048-byte header, then the data; a header alone with a count of 0 for an empty bank), so
+// "loom_samples.py restore" takes the file too. tools/make_pages.py inlines it after app/web/samples/loom_samples.js,
+// both inside one function that returns EXTRAS; tests/host/backup_web.mjs runs it against a simulated FM-1.
+const SB = [0x7D, 0x46, 0x4C];
+const SB_RC = { 1: "size or offset", 2: "erase", 3: "write", 4: "not begun", 5: "header", 6: "the data's check",
+  7: "no samples", 8: "an update record's mark" };
+
+// one request, its answer (the bytes after the command; one that is(r) accepts: a read's or a write's own offset, not
+// a late answer to an earlier one) or an error; link: fm1-base's backup page Link
+async function sbReq(link, cmd, args, ms = 3000, is = () => true) {
+  link.send([0xF0, ...SB, cmd, ...args, 0xF7]);
+  const end = Date.now() + ms;
+  for (;;) {
+    const left = end - Date.now();
+    if (left <= 0 || link.lost) throw new Error("Bloomy stopped answering.");
+    const p = await link.read(left);
+    if (p && p.length > 5 && p[1] === SB[0] && p[2] === SB[1] && p[3] === SB[2] && p[4] === cmd && is(p.slice(5, -1))) return p.slice(5, -1);
+  }
+}
+const off3 = (o) => [o & 0x7F, (o >> 7) & 0x7F, (o >> 14) & 0x7F];
+const sameOff = (r, o) => r[1] === (o & 0x7F) && r[2] === ((o >> 7) & 0x7F) && r[3] === ((o >> 14) & 0x7F);
+
+// n bytes of the bank from virtual offset off (224 a request; a lost answer asked again)
+async function sbRead(link, off, n, onPart) {
+  const out = new Uint8Array(n);
+  for (let at = 0; at < n;) {
+    const want = Math.min(READ_MAX, n - at), adr = off + at;
+    let r = null;
+    for (let k = 1; !r; k++) {
+      try { r = await sbReq(link, 17, [0, ...off3(adr), want & 0x7F, want >> 7], 3000, (a) => sameOff(a, adr)); }
+      catch (e) { if (k >= 4) throw e; }
+    }
+    if (r[4]) throw new Error(r[4] === 4 ? "Bloomy is in the middle of writing its samples. Try again when it's done."
+                                         : `Bloomy couldn't read its samples (${SB_RC[r[4]] || r[4]}).`);
+    const b = unpack7(r.slice(5));
+    if (b.length < want) throw new Error("A piece of the samples went missing on the way. Press Back up again.");
+    out.set(b.subarray(0, want), at);
+    at += want;
+    if (onPart) onPart(at / n);
+  }
+  return out;
+}
+
+function emptyBank() {
+  const hdr = new Uint8Array(BANK_HDR), v = new DataView(hdr.buffer);
+  v.setUint32(0, BANK_MAGIC, true);
+  v.setUint16(4, BANK_VER, true);
+  v.setUint32(16, BANK_SIZE, true);
+  return hdr;
+}
+
+// a section's bank image checked -> {count, used, img} (throws in plain words)
+function bankOf(data) {
+  const h = data.length >= BANK_HDR ? parseHeader(data.subarray(0, BANK_HDR)) : null;
+  if (!h || h.dataLen > BANK_MAX_DATA || data.length !== BANK_HDR + h.dataLen)
+    throw new Error("The samples in this backup are damaged.");
+  if (crc32(data.subarray(BANK_HDR)) !== h.crc) throw new Error("The samples in this backup are damaged (a byte changed).");
+  return { count: h.count, used: h.dataLen, img: data };
+}
+
+const LOOM_SAMPLES = {
+  tag: "LSMP",
+  what: "the samples",
+  async backup(link, onProgress = () => {}) {
+    const info = await sbReq(link, 15, [0]);
+    if (info[0] !== 2) throw new Error("This Bloomy is too old to back up its samples. Update it from the Install page.");
+    if (!info[5]) { onProgress(1); return emptyBank(); }
+    const hdr = await sbRead(link, 0, BANK_HDR);
+    const h = parseHeader(hdr);
+    if (!h || h.dataLen > BANK_MAX_DATA) throw new Error("Bloomy's samples could not be read (their header).");
+    const data = await sbRead(link, BANK_HDR, h.dataLen, onProgress);
+    if (crc32(data) !== h.crc) throw new Error("The samples arrived damaged. Press Back up again.");
+    const img = new Uint8Array(BANK_HDR + data.length);
+    img.set(hdr);
+    img.set(data, BANK_HDR);
+    return img;
+  },
+  check(data) {
+    const b = bankOf(data);
+    return b.count ? `${b.count} sample${b.count === 1 ? "" : "s"} (${Math.round(b.used / 1024)} KB)` : "no samples";
+  },
+  async restore(link, data, onProgress = () => {}) {
+    const b = bankOf(data);
+    if (!b.count) {
+      const r = await sbReq(link, 14, [0], 60000);
+      if (r[1]) throw new Error(`Bloomy couldn't erase its samples (${SB_RC[r[1]] || r[1]}).`);
+      onProgress(1);
+      return;
+    }
+    const total = b.img.length - BANK_HDR;
+    for (const [cmd, args, ms, what] of frames(b.img)) {
+      let r = null;
+      for (let k = 1; !r; k++) {                     // a write again when its answer is lost (the same bytes)
+        try { r = await sbReq(link, cmd, args, ms, (a) => cmd !== 12 || sameOff(a, what)); }
+        catch (e) { if (cmd !== 12 || k >= 4) throw e; }
+      }
+      const rc = r.length ? r[r.length - 1] : 99;
+      if (rc) throw new Error(`Bloomy didn't take the samples (${SB_RC[rc] || rc}).`);
+      if (cmd === 12) onProgress((Math.min(what + 256, b.img.length) - BANK_HDR) / total);
+    }
+    const info = await sbReq(link, 15, [0]);
+    if (info[5] !== b.count) throw new Error(`Bloomy shows ${info[5]} samples, not ${b.count}.`);
+  },
+};
+return [LOOM_SAMPLES];
+})();
+
+
+class Link {
+  constructor(input, output) {
+    this.input = input; this.output = output; this.q = []; this.waiter = null;
+    input.onmidimessage = (ev) => {
+      if (ev.data[0] !== 0xF0) return;
+      this.q.push(Array.from(ev.data));
+      if (this.waiter) { const w = this.waiter; this.waiter = null; w(); }
+    };
+  }
+  get lost() { return this.input.state === "disconnected" || this.output.state === "disconnected"; }
+  send(bytes) { try { this.output.send(bytes); return true; } catch (_) { return false; } }
+  drain() { this.q.length = 0; }
+  async read(ms) {
+    if (!this.q.length) {
+      let tm;
+      await Promise.race([new Promise((r) => { this.waiter = r; }), new Promise((r) => { tm = setTimeout(r, Math.max(ms, 0)); })]);
+      clearTimeout(tm);
+      this.waiter = null;
+    }
+    return this.q.shift() || null;
+  }
+  close() { this.input.onmidimessage = null; }
+}
+
+
+</script><script>
+const decoder=Bloomy.un64('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IgEkACAGQv///////z+DIQMCfiAGQjCIQv//AYMiBKciAEGB+ABrQf0PTQRAIANCBIYgAkI8iIQhAyAAQYD4AGutIQQCQCACQv//////////D4MiAkKBgICAgICAgAhaBEAgA0IBfCEDDAELIAJCgICAgICAgIAIUg0AIANCAYMgA3whAwtCACADIANC/////////wdWIgAbIQIgAK0gBHwMAQsCQCACIAOEUA0AIARC//8BUg0AIANCBIYgAkI8iIRCgICAgICAgASEIQJC/w8MAQsgAEH+hwFLBEBCACECQv8PDAELQYD4AEGB+AAgBFAiChsiCCAAayIJQfAASgRAQgAhAkIADAELIAMgA0KAgICAgIDAAIQgChshA0EAIQogACAIRwRAIAFBEGohACACIQUgAyEEAkBBgAEgCWsiCEHAAHEEQCACIAhBQGqthiEEQgAhBQwBCyAIRQ0AIAQgCK0iB4YgBUHAACAIa62IhCEEIAUgB4YhBQsgACAFNwMAIAAgBDcDCCABKQMQIAEpAxiEQgBSIQoLAkAgCUHAAHEEQCADIAlBQGqtiCECQgAhAwwBCyAJRQ0AIANBwAAgCWuthiACIAmtIgSIhCECIAMgBIghAwsgASACNwMAIAEgAzcDCCABKQMIQgSGIAEpAwAiA0I8iIQhAgJAIAqtIANC//////////8Pg4QiA0KBgICAgICAgAhaBEAgAkIBfCECDAELIANCgICAgICAgIAIUg0AIAJCAYMgAnwhAgsgAkKAgICAgICACIUgAiACQv////////8HViIAGyECIACtCyEDIAFBIGokACAGQoCAgICAgICAgH+DIANCNIaEIAKEvzkDAAsVACAARQRAQQAPC0HIHyAANgIAQX8LnwIAIABFBEBBAA8LAn8CQCAABH8gAUH/AE0NAQJAQcAfKAIAKAIARQRAIAFBgH9xQYC/A0YNA0HIH0EZNgIADAELIAFB/w9NBEAgACABQT9xQYABcjoAASAAIAFBBnZBwAFyOgAAQQIMBAsgAUGAQHFBgMADRyABQYCwA09xRQRAIAAgAUE/cUGAAXI6AAIgACABQQx2QeABcjoAACAAIAFBBnZBP3FBgAFyOgABQQMMBAsgAUGAgARrQf//P00EQCAAIAFBP3FBgAFyOgADIAAgAUESdkHwAXI6AAAgACABQQZ2QT9xQYABcjoAAiAAIAFBDHZBP3FBgAFyOgABQQQMBAtByB9BGTYCAAtBfwVBAQsMAQsgACABOgAAQQELC+EnAQt/IwBBEGsiCiQAAkACQAJAAkACQAJAAkACQAJAAkACQAJAIABB9AFNBEBBjCAoAgAiBkEQIABBC2pB+ANxIABBC0kbIgRBA3YiAXYiAEEDcQRAAkAgAEF/c0EBcSABaiICQQN0IgFBtCBqIgAgASgCvCAiBCgCCCIDRgRAQYwgIAZBfiACd3E2AgAMAQsgAyAANgIMIAAgAzYCCAsgBEEIaiEAIAQgAUEDcjYCBCABIARqIgEgASgCBEEBcjYCBAwNCyAEQZQgKAIAIghNDQEgAARAAkAgACABdEECIAF0IgBBACAAa3JxaCIFQQN0IgFBtCBqIgMgASgCvCAiACgCCCICRgRAQYwgIAZBfiAFd3EiBjYCAAwBCyACIAM2AgwgAyACNgIICyAAIARBA3I2AgQgACAEaiICIAEgBGsiBEEBcjYCBCAAIAFqIAQ2AgAgCARAIAhBeHFBtCBqIQNBoCAoAgAhAQJ/IAZBASAIQQN2dCIFcUUEQEGMICAFIAZyNgIAIAMMAQsgAygCCAshBSADIAE2AgggBSABNgIMIAEgAzYCDCABIAU2AggLIABBCGohAEGgICACNgIAQZQgIAQ2AgAMDQtBkCAoAgAiC0UNASALaEECdCgCvCIiAygCBEF4cSAEayEBIAMhAgNAAkAgAygCECIARQRAIAMoAhQiAEUNAQsgACgCBEF4cSAEayIDIAEgASADSyIDGyEBIAAgAiADGyECIAAhAwwBCwsgAigCGCEJIAIgAigCDCIARwRAIAIoAggiAyAANgIMIAAgAzYCCAwMCyACKAIUIgMEfyACQRRqBSACKAIQIgNFDQMgAkEQagshBQNAIAUhByADIgBBFGohBSAAKAIUIgMNACAAQRBqIQUgACgCECIDDQALIAdBADYCAAwLC0F/IQQgAEG/f0sNACAAQQtqIgFBeHEhBEGQICgCACIJRQ0AQR8hCCAAQfT//wdNBEAgBEEmIAFBCHZnIgBrdkEBcSAAQQF0a0E+aiEIC0EAIARrIQECQAJAAkAgCEECdCgCvCIiA0UEQEEAIQAMAQtBACEAIARBGSAIQQF2a0EAIAhBH0cbdCECA0ACQCADKAIEQXhxIARrIgYgAU8NACADIQUgBiIBDQBBACEBIAUhAAwDCyAAIAMoAhQiBiAGIAMgAkEddkEEcWooAhAiB0YbIAAgBhshACACQQF0IQIgByIDDQALCyAAIAVyRQRAQQAhBUECIAh0IgBBACAAa3IgCXEiAEUNAyAAaEECdCgCvCIhAAsgAEUNAQsDQCAAKAIEQXhxIARrIgYgAUkhAiAGIAEgAhshASAAIAUgAhshBSAAKAIQIgMEfyADBSAAKAIUCyIADQALCyAFRQ0AIAFBlCAoAgAgBGtPDQAgBSgCGCEHIAUgBSgCDCIARwRAIAUoAggiAyAANgIMIAAgAzYCCAwKCyAFKAIUIgMEfyAFQRRqBSAFKAIQIgNFDQMgBUEQagshAgNAIAIhBiADIgBBFGohAiAAKAIUIgMNACAAQRBqIQIgACgCECIDDQALIAZBADYCAAwJCyAEQZQgKAIAIgBNBEBBoCAoAgAhAQJAIAAgBGsiA0EQTwRAIAEgBGoiAiADQQFyNgIEIAAgAWogAzYCACABIARBA3I2AgQMAQsgASAAQQNyNgIEIAAgAWoiACAAKAIEQQFyNgIEQQAhA0EAIQILQZQgIAM2AgBBoCAgAjYCACABQQhqIQAMCwsgBEGYICgCACICSQRAQZggIAIgBGsiATYCAEGkIEGkICgCACIAIARqIgM2AgAgAyABQQFyNgIEIAAgBEEDcjYCBCAAQQhqIQAMCwtBACEAIARBL2oiCAJ/QeQjKAIABEBB7CMoAgAMAQtB8CNCfzcCAEHoI0KAoICAgIAENwIAQeQjIApBDGpBcHFB2KrVqgVzNgIAQfgjQQA2AgBByCNBADYCAEGAIAsiAWoiBkEAIAFrIgdxIgUgBE0NCkHEIygCACIBBEBBvCMoAgAiAyAFaiIJIANNDQsgASAJSQ0LC0HIIy0AAEEEcQ0EAkACQEGkICgCACIBBEBBzCMhAANAIAAoAgAiAyABTQRAIAEgAyAAKAIEakkNAwsgACgCCCIADQALC0EAEBgiAkF/Rg0FIAUhBkHoIygCACIAQQFrIgEgAnEEQCAFIAJrIAEgAmpBACAAa3FqIQYLIAQgBk8NBUHEIygCACIABEBBvCMoAgAiASAGaiIDIAFNDQYgACADSQ0GCyAGEBgiACACRw0BDAcLIAYgAmsgB3EiBhAYIgIgACgCACAAKAIEakYNAyACIQALAkAgAEF/Rg0AIAYgBEEwak8NAEHsIygCACIBIAggBmtqQQAgAWtxIgEQGEF/Rg0EIAEgBmohBiAAIQIMBgsgACECIABBf0cNBQwDC0EAIQAMCAtBACEADAYLIAJBf0cNAgtByCNByCMoAgBBBHI2AgALIAUQGCECQQAQGCEAIAJBf0YNASAAQX9GDQEgACACTQ0BIAAgAmsiBiAEQShqTQ0BC0G8I0G8IygCACAGaiIANgIAQcAjKAIAIABJBEBBwCMgADYCAAsCQAJAAkBBpCAoAgAiAQRAQcwjIQADQCACIAAoAgAiAyAAKAIEIgVqRg0CIAAoAggiAA0ACwwCC0GcICgCACIAQQAgACACTRtFBEBBnCAgAjYCAAtBACEAQdAjIAY2AgBBzCMgAjYCAEGsIEF/NgIAQbAgQeQjKAIANgIAQdgjQQA2AgADQCAAQQN0IgEgAUG0IGoiAzYCvCAgASADNgLAICAAQQFqIgBBIEcNAAtBmCAgBkEoayIAQQAgAmtBB3EiAWsiAzYCAEGkICABIAJqIgE2AgAgASADQQFyNgIEIAAgAmpBKDYCBEGoIEH0IygCADYCAAwCCyABIAJPDQAgASADSQ0AIAAoAgxBCHENACAAIAUgBmo2AgRBpCAgAUEAIAFrQQdxIgBqIgM2AgBBmCBBmCAoAgAgBmoiAiAAayIANgIAIAMgAEEBcjYCBCABIAJqQSg2AgRBqCBB9CMoAgA2AgAMAQtBnCAoAgAgAksEQEGcICACNgIACyACIAZqIQNBzCMhAAJAA0AgAyAAKAIAIgVHBEAgACgCCCIADQEMAgsLIAAtAAxBCHFFDQMLQcwjIQADQAJAIAAoAgAiAyABTQRAIAEgAyAAKAIEaiIDSQ0BCyAAKAIIIQAMAQsLQZggIAZBKGsiAEEAIAJrQQdxIgVrIgc2AgBBpCAgAiAFaiIFNgIAIAUgB0EBcjYCBCAAIAJqQSg2AgRBqCBB9CMoAgA2AgAgASADQScgA2tBB3FqQS9rIgAgACABQRBqSRsiBUEbNgIEIAVB1CMpAgA3AhAgBUHMIykCADcCCEHQIyAGNgIAQdQjIAVBCGo2AgBBzCMgAjYCAEHYI0EANgIAIAVBGGohAANAIABBBzYCBCAAQQhqIQIgAEEEaiEAIAIgA0kNAAsgASAFRg0AIAUgBSgCBEF+cTYCBCABIAUgAWsiAkEBcjYCBCAFIAI2AgACfyACQf8BTQRAIAJB+AFxQbQgaiEAAn9BjCAoAgAiA0EBIAJBA3Z0IgJxRQRAQYwgIAIgA3I2AgAgAAwBCyAAKAIICyEDIAAgATYCCCADIAE2AgxBDCECQQgMAQtBHyEAIAJB////B00EQCACQSYgAkEIdmciAGt2QQFxIABBAXRyQT5zIQALIAEgADYCHCABQgA3AhAgAEECdEG8ImohAwJAAkBBkCAoAgAiBUEBIAB0IgZxRQRAQZAgIAUgBnI2AgAgAyABNgIAIAEgAzYCGAwBCyACQRkgAEEBdmtBACAAQR9HG3QhACADKAIAIQUDQCAFIgMoAgRBeHEgAkYNAiAAQR12IQUgAEEBdCEAIAMgBUEEcWoiBigCECIFDQALIAYgATYCECABIAM2AhgLQQghAiABIQMgASEAQQwMAQsgAygCCCIAIAE2AgwgAyABNgIIIAEgADYCCEEAIQBBGCECQQwLIAFqIAM2AgAgASACaiAANgIAC0GYICgCACIAIARNDQBBmCAgACAEayIBNgIAQaQgQaQgKAIAIgAgBGoiAzYCACADIAFBAXI2AgQgACAEQQNyNgIEIABBCGohAAwEC0HIH0EwNgIAQQAhAAwDCyAAIAI2AgAgACAAKAIEIAZqNgIEIAJBACACa0EHcWoiCSAEQQNyNgIEIAVBACAFa0EHcWoiBiAEIAlqIgFrIQICQEGkICgCACAGRgRAQaQgIAE2AgBBmCBBmCAoAgAgAmoiBDYCACABIARBAXI2AgQMAQtBoCAoAgAgBkYEQEGgICABNgIAQZQgQZQgKAIAIAJqIgQ2AgAgASAEQQFyNgIEIAEgBGogBDYCAAwBCyAGKAIEIgVBA3FBAUYEQCAFQXhxIQggBigCDCEEAkAgBUH/AU0EQCAGKAIIIgAgBEYEQEGMIEGMICgCAEF+IAVBA3Z3cTYCAAwCCyAAIAQ2AgwgBCAANgIIDAELIAYoAhghBwJAIAQgBkcEQCAGKAIIIgUgBDYCDCAEIAU2AggMAQsCQCAGKAIUIgUEfyAGQRRqBSAGKAIQIgVFDQEgBkEQagshAANAIAAhAyAFIgRBFGohACAEKAIUIgUNACAEQRBqIQAgBCgCECIFDQALIANBADYCAAwBC0EAIQQLIAdFDQACQCAGKAIcIgBBAnQiBSgCvCIgBkYEQCAFQbwiaiAENgIAIAQNAUGQIEGQICgCAEF+IAB3cTYCAAwCCwJAIAYgBygCEEYEQCAHIAQ2AhAMAQsgByAENgIUCyAERQ0BCyAEIAc2AhggBigCECIFBEAgBCAFNgIQIAUgBDYCGAsgBigCFCIFRQ0AIAQgBTYCFCAFIAQ2AhgLIAYgCGoiBigCBCEFIAIgCGohAgsgBiAFQX5xNgIEIAEgAkEBcjYCBCABIAJqIAI2AgAgAkH/AU0EQCACQfgBcUG0IGohBAJ/QYwgKAIAIgVBASACQQN2dCICcUUEQEGMICACIAVyNgIAIAQMAQsgBCgCCAshAiAEIAE2AgggAiABNgIMIAEgBDYCDCABIAI2AggMAQtBHyEEIAJB////B00EQCACQSYgAkEIdmciBGt2QQFxIARBAXRyQT5zIQQLIAEgBDYCHCABQgA3AhAgBEECdEG8ImohBQJAAkBBkCAoAgAiAEEBIAR0IgZxRQRAQZAgIAAgBnI2AgAgBSABNgIAIAEgBTYCGAwBCyACQRkgBEEBdmtBACAEQR9HG3QhBCAFKAIAIQADQCAAIgUoAgRBeHEgAkYNAiAEQR12IQAgBEEBdCEEIAUgAEEEcWoiBigCECIADQALIAYgATYCECABIAU2AhgLIAEgATYCDCABIAE2AggMAQsgBSgCCCIEIAE2AgwgBSABNgIIIAFBADYCGCABIAU2AgwgASAENgIICyAJQQhqIQAMAgsCQCAHRQ0AAkAgBSgCHCICQQJ0IgMoArwiIAVGBEAgA0G8ImogADYCACAADQFBkCAgCUF+IAJ3cSIJNgIADAILAkAgBSAHKAIQRgRAIAcgADYCEAwBCyAHIAA2AhQLIABFDQELIAAgBzYCGCAFKAIQIgMEQCAAIAM2AhAgAyAANgIYCyAFKAIUIgNFDQAgACADNgIUIAMgADYCGAsCQCABQQ9NBEAgBSABIARqIgBBA3I2AgQgACAFaiIAIAAoAgRBAXI2AgQMAQsgBSAEQQNyNgIEIAQgBWoiAiABQQFyNgIEIAEgAmogATYCACABQf8BTQRAIAFB+AFxQbQgaiEAAn9BjCAoAgAiBEEBIAFBA3Z0IgFxRQRAQYwgIAEgBHI2AgAgAAwBCyAAKAIICyEBIAAgAjYCCCABIAI2AgwgAiAANgIMIAIgATYCCAwBC0EfIQAgAUH///8HTQRAIAFBJiABQQh2ZyIAa3ZBAXEgAEEBdHJBPnMhAAsgAiAANgIcIAJCADcCECAAQQJ0QbwiaiEEAkACQCAJQQEgAHQiA3FFBEBBkCAgAyAJcjYCACAEIAI2AgAgAiAENgIYDAELIAFBGSAAQQF2a0EAIABBH0cbdCEAIAQoAgAhAwNAIAMiBCgCBEF4cSABRg0CIABBHXYhAyAAQQF0IQAgBCADQQRxaiIGKAIQIgMNAAsgBiACNgIQIAIgBDYCGAsgAiACNgIMIAIgAjYCCAwBCyAEKAIIIgAgAjYCDCAEIAI2AgggAkEANgIYIAIgBDYCDCACIAA2AggLIAVBCGohAAwBCwJAIAlFDQACQCACKAIcIgVBAnQiAygCvCIgAkYEQCADQbwiaiAANgIAIAANAUGQICALQX4gBXdxNgIADAILAkAgAiAJKAIQRgRAIAkgADYCEAwBCyAJIAA2AhQLIABFDQELIAAgCTYCGCACKAIQIgMEQCAAIAM2AhAgAyAANgIYCyACKAIUIgNFDQAgACADNgIUIAMgADYCGAsCQCABQQ9NBEAgAiABIARqIgBBA3I2AgQgACACaiIAIAAoAgRBAXI2AgQMAQsgAiAEQQNyNgIEIAIgBGoiBCABQQFyNgIEIAEgBGogATYCACAIBEAgCEF4cUG0IGohA0GgICgCACEAAn9BASAIQQN2dCIFIAZxRQRAQYwgIAUgBnI2AgAgAwwBCyADKAIICyEFIAMgADYCCCAFIAA2AgwgACADNgIMIAAgBTYCCAtBoCAgBDYCAEGUICABNgIACyACQQhqIQALIApBEGokACAAC+ELAQh/AkAgAEUNACAAQQhrIgMgAEEEaygCACIBQXhxIgBqIQQCQCABQQFxDQAgAUECcUUNASADIAMoAgAiAmsiA0GcICgCAEkNASAAIAJqIQACQAJAAkBBoCAoAgAgA0cEQCADKAIMIQEgAkH/AU0EQCABIAMoAggiBUcNAkGMIEGMICgCAEF+IAJBA3Z3cTYCAAwFCyADKAIYIQYgASADRwRAIAMoAggiAiABNgIMIAEgAjYCCAwECyADKAIUIgIEfyADQRRqBSADKAIQIgJFDQMgA0EQagshBQNAIAUhCCACIgFBFGohBSABKAIUIgINACABQRBqIQUgASgCECICDQALIAhBADYCAAwDCyAEKAIEIgFBA3FBA0cNA0GUICAANgIAIAQgAUF+cTYCBCADIABBAXI2AgQgBCAANgIADwsgBSABNgIMIAEgBTYCCAwCC0EAIQELIAZFDQACQCADKAIcIgVBAnQiAigCvCIgA0YEQCACQbwiaiABNgIAIAENAUGQIEGQICgCAEF+IAV3cTYCAAwCCwJAIAMgBigCEEYEQCAGIAE2AhAMAQsgBiABNgIUCyABRQ0BCyABIAY2AhggAygCECICBEAgASACNgIQIAIgATYCGAsgAygCFCICRQ0AIAEgAjYCFCACIAE2AhgLIAMgBE8NACAEKAIEIgJBAXFFDQACQAJAAkACQCACQQJxRQRAQaQgKAIAIARGBEBBpCAgAzYCAEGYIEGYICgCACAAaiIANgIAIAMgAEEBcjYCBCADQaAgKAIARw0GQZQgQQA2AgBBoCBBADYCAA8LQaAgKAIAIgYgBEYEQEGgICADNgIAQZQgQZQgKAIAIABqIgA2AgAgAyAAQQFyNgIEIAAgA2ogADYCAA8LIAJBeHEgAGohACAEKAIMIQEgAkH/AU0EQCAEKAIIIgUgAUYEQEGMIEGMICgCAEF+IAJBA3Z3cTYCAAwFCyAFIAE2AgwgASAFNgIIDAQLIAQoAhghByABIARHBEAgBCgCCCICIAE2AgwgASACNgIIDAMLIAQoAhQiAgR/IARBFGoFIAQoAhAiAkUNAiAEQRBqCyEFA0AgBSEIIAIiAUEUaiEFIAEoAhQiAg0AIAFBEGohBSABKAIQIgINAAsgCEEANgIADAILIAQgAkF+cTYCBCADIABBAXI2AgQgACADaiAANgIADAMLQQAhAQsgB0UNAAJAIAQoAhwiBUECdCICKAK8IiAERgRAIAJBvCJqIAE2AgAgAQ0BQZAgQZAgKAIAQX4gBXdxNgIADAILAkAgBCAHKAIQRgRAIAcgATYCEAwBCyAHIAE2AhQLIAFFDQELIAEgBzYCGCAEKAIQIgIEQCABIAI2AhAgAiABNgIYCyAEKAIUIgJFDQAgASACNgIUIAIgATYCGAsgAyAAQQFyNgIEIAAgA2ogADYCACADIAZHDQBBlCAgADYCAA8LIABB/wFNBEAgAEH4AXFBtCBqIQECf0GMICgCACICQQEgAEEDdnQiAHFFBEBBjCAgACACcjYCACABDAELIAEoAggLIQAgASADNgIIIAAgAzYCDCADIAE2AgwgAyAANgIIDwtBHyEBIABB////B00EQCAAQSYgAEEIdmciAWt2QQFxIAFBAXRyQT5zIQELIAMgATYCHCADQgA3AhAgAUECdEG8ImohBQJ/AkACf0GQICgCACICQQEgAXQiBHFFBEBBkCAgAiAEcjYCACAFIAM2AgBBGCEBQQgMAQsgAEEZIAFBAXZrQQAgAUEfRxt0IQEgBSgCACEFA0AgBSICKAIEQXhxIABGDQIgAUEddiEFIAFBAXQhASACIAVBBHFqIgQoAhAiBQ0ACyAEIAM2AhBBGCEBIAIhBUEICyEAIAMhAiADDAELIAIoAggiBSADNgIMIAIgAzYCCEEYIQBBCCEBQQALIQQgASADaiAFNgIAIAMgAjYCDCAAIANqIAQ2AgBBrCBBrCAoAgBBAWsiA0F/IAMbNgIACwtOAgF+AX8CQCAArUIHfEL4////H4NBxB8oAgAiAK18IgFC/////w9YBEAgAaciAj8AQRB0TQ0BC0HIH0EwNgIAQX8PC0HEHyACNgIAIAALBgAgACQACwQAIwALHABB/CMoAgBFBEBBgCQgATYCAEH8IyAANgIACwsLoRUYAEGQCAsEAgMFCABBpAgLSQEAAAACAAAAAwAAAAQAAAAFAAAABgAAAAcAAAAIAAAACQAAAAoAAAALAAAADAAAAA0AAAAOAAAADwAAABAAAAAUAAAAHAAAADwAQYAJCwQDBQgLAEGUCQvjBwEAAAACAAAAAwAAAAQAAAAFAAAABgAAAAcAAAAIAAAACQAAAAoAAAALAAAADAAAAA0AAAAOAAAADwAAABAAAAAYAAAAOAAAADgBAAAAAAAAAQEBAQICAgIDAwMDBAQEBAUFBQUGBgYGBwcHBwgICAgJCQkJCgoKCgsLCwsMDAwMDQ0NDQ4ODg4PDw8PAAAAAAEAAAACAAAAAwAAAAQAAAAGAAAACAAAAAoAAAAMAAAAEAAAABQAAAAYAAAAHAAAACQAAAAsAAAANAAAADwAAABMAAAAXAAAAGwAAAB8AAAAnAAAALwAAADcAAAA/AAAADwBAAB8AQAAvAEAAPwBAAB8AgAA/AIAAHwDAAD8AwAA/AQAAPwFAAD8BgAA/AcAAPwJAAD8CwAA/A0AAPwPAAD8EwAA/BcAAPwbAAD8HwAA/CcAAPwvAAD8NwAA/D8AAPxPAAD8XwAA/G8AAPx/AAD8nwAA/L8AAPzfAAD8/wAA/D8BAPx/AQD8vwEA/P8BAPx/AgD8/wIA/H8DAC0rICAgMFgweAAtMFgrMFggMFgtMHgrMHggMHgAbiA+PSAwICYmIG4gPD0gcy0+YWNjdW1fbmJpdHMAbmFuAHdvcmsvcmVtb3RlZm0xL2x6ZnNlLW1hc3Rlci9zcmMvbHpmc2VfZnNlLmgAaW5mAGZzZV9pbml0X2RlY29kZXJfdGFibGUAZnNlX2luaXRfdmFsdWVfZGVjb2Rlcl90YWJsZQBsemZzZV9kZWNvZGVfbG1kAHdvcmsvcmVtb3RlZm0xL2x6ZnNlLW1hc3Rlci9zcmMvbHpmc2VfZnNlLmMAd29yay9yZW1vdGVmbTEvbHpmc2UtbWFzdGVyL3NyYy9semZzZV9kZWNvZGVfYmFzZS5jAG1fc3RhdGUgPCBMWkZTRV9FTkNPREVfTV9TVEFURVMAbF9zdGF0ZSA8IExaRlNFX0VOQ09ERV9MX1NUQVRFUwBkX3N0YXRlIDwgTFpGU0VfRU5DT0RFX0RfU1RBVEVTAE5BTgBJTkYAbnN5bWJvbHMgPD0gMjU2AGZzZV9pbl9wdWxsMzIAZnNlX2luX2NoZWNrZWRfZmx1c2gzMgBzLT5hY2N1bV9uYml0cyA+PSAyNCAmJiBzLT5hY2N1bV9uYml0cyA8IDMyAChzLT5hY2N1bSA+PiBzLT5hY2N1bV9uYml0cykgPT0gMABmc2VfY2hlY2tfZnJlcShmcmVxLCBuc3ltYm9scywgbnN0YXRlcykgPT0gMAAuAChudWxsKQBBc3NlcnRpb24gZmFpbGVkOiAlcyAoJXM6ICVzOiAlZCkKAEGAEQvEAQIDAgUCAwIIAgMCBQIDAg4CAwIFAgMCCAIDAgUCAwIOAAIBBAADAf8AAgEFAAMB/wACAQYAAwH/AAIBBwADAf8AAAAAAQAAAAMAAAAHAAAADwAAAB8AAAA/AAAAfwAAAP8AAAD/AQAA/wMAAP8HAAD/DwAA/x8AAP8/AAD/fwAA//8AAP//AQD//wMA//8HAP//DwD//x8A//8/AP//fwD///8A////Af///wP///8H////D////x////8/////f/////8AQdASC8EIAQAAAAEAAAABAAAAAQAAAAEAAAABAAAACgAAAAMAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAJAAAAAwAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAkAAAADAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAACwAAAAMAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAALAAAAAwAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAsAAAADAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAACwAAAAMAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAALAAAAAwAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAQAAAADAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAABAAAAAMAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAEAAAAAwAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAQAAAADAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAABAAAAAMAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAEAAAAAwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAEAAAAAwAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAQAAAADAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAABAAAAAMAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAEAAAAAwAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAABAAAAAMAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAEAAAAAwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAIAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABgAAAAUAAAAFAAAABQAAAAUAAAAFAAAABQAAAAUAAAAFAAAABQAAAAUAAAAFAAAABQAAAAUAAAAFAAAABQAAABkACwAZGRkAAAAABQAAAAAAAAkAAAAACwAAAAAAAAAAGQAKChkZGQMKBwABAAkLGAAACQYLAAALAAYZAAAAGRkZAEGhGwshDgAAAAAAAAAAGQALDRkZGQANAAACAAkOAAAACQAOAAAOAEHbGwsBDABB5xsLFRMAAAAAEwAAAAAJDAAAAAAADAAADABBlRwLARAAQaEcCxUPAAAABA8AAAAACRAAAAAAABAAABAAQc8cCwESAEHbHAseEQAAAAARAAAAAAkSAAAAAAASAAASAAAaAAAAGhoaAEGSHQsOGgAAABoaGgAAAAAAAAkAQcMdCwEUAEHPHQsVFwAAAAAXAAAAAAkUAAAAAAAUAAAUAEH9HQsBFgBBiR4LJxUAAAAAFQAAAAAJFgAAAAAAFgAAFgAAMDEyMzQ1Njc4OUFCQ0RFRgBBsB4LAQUAQbweCwECAEHUHgsKAwAAAAQAAADUDwBB7B4LAQIAQfweCwj//////////wBBwB8LB/QPAAAQEgE=');
+const $=id=>document.getElementById(id);
+let picked=null,busy=false,serial=0,answer=null,urls=[];
+const say=(s,error=false)=>{$('status').textContent=s;$('status').className=error?'error':''};
+function lock(on){busy=on;for(const id of ['song','source','destination','prepare'])$(id).disabled=on||id==='prepare'&&!picked;$('progress').hidden=!on;parent.postMessage({bloomyBusy:on},'*');}
+function progress(v){$('progress').value=v;}
+function download(bytes,name){for(const u of urls)URL.revokeObjectURL(u);urls=[];const url=URL.createObjectURL(new Blob([bytes],{type:'application/octet-stream'}));urls.push(url);const a=document.createElement('a');a.href=url;a.download=name;a.textContent='Salva backup prima del caricamento';a.className='download';$('backupfiles').replaceChildren(a);const file=new File([bytes],name,{type:'application/octet-stream'});try{if(navigator.canShare?.({files:[file]})){const b=document.createElement('button');b.textContent='Condividi / Salva in File';b.className='secondary';b.onclick=async()=>{try{await navigator.share({files:[file]})}catch(e){if(e.name!=='AbortError')say('Condivisione non riuscita: usa il collegamento al backup.',true)}};$('backupfiles').append(b)}}catch(_){} }
+function confirmLoad(){return new Promise(resolve=>{answer=resolve;$('confirmation').hidden=false;});}
+function respond(v){if(answer){const f=answer;answer=null;$('confirmation').hidden=true;f(v)}}
+$('cancel').onclick=()=>respond(false);$('commit').onclick=()=>respond(true);
+$('song').onchange=async()=>{const seq=++serial;picked=null;$('prepare').disabled=true;$('devicepanel').hidden=true;$('sourcebox').hidden=true;$('fileinfo').textContent='';try{const f=$('song').files[0];if(!f)return;if(f.size>3*1048576)throw Error('File troppo grande (massimo 3 MiB).');const m=await SlotTransfer.readFile(new Uint8Array(await f.arrayBuffer()),decoder);if(seq!==serial)return;picked=m;const opts=m.sourceSlots.map(s=>{const o=document.createElement('option');o.value=s;o.textContent='Slot '+s+' · '+SlotTransfer.info(m,s).tempo+' BPM';return o});$('source').replaceChildren(...opts);$('sourcebox').hidden=opts.length===1;$('fileinfo').textContent=f.name+' · '+opts.length+' progetto/i salvato/i';$('prepare').disabled=false;say('Scegli lo slot di destinazione, poi leggi l’FM-1.');}catch(e){if(seq===serial){picked=null;say(e.message,true)}}};
+async function connect(){if(typeof navigator.requestMIDIAccess!=='function')throw Error('Web MIDI non disponibile. Su iPhone usa MIDIWeb Browser.');const access=await navigator.requestMIDIAccess({sysex:true});const dev=await PB.find(access,(i,o)=>new Link(i,o));if(!['FM-1_10010000','FM-1_10010001'].includes(dev.id)){dev.link.close();throw Error('Versione non qualificata: serve Bloomy 1.0 o 1.0.1. Identità: '+dev.id)}return dev;}
+async function readDevice(link){const r=await PB.backup(link,()=>{});if(r.flags&1)throw Error('Ferma PLAY sull’FM-1 e riprova. Salva prima le modifiche con SAVE.');const bank=await EXTRAS[0].backup(link,f=>progress(f*100));const bytes=PB.join(r.image,[{tag:'LSMP',data:bank}]);return {model:Bloomy.loomRead(bytes),bytes};}
+async function run(){if(busy||!picked)return;lock(true);let dev=null,written=false;try{say('Lettura degli slot e dei campioni dall’FM-1…');dev=await connect();const before=await readDevice(dev.link),dest=Number($('destination').value),src=Number($('source').value),plan=SlotTransfer.merge(before.model,picked,src,dest);$('devicepanel').hidden=false;$('slots').replaceChildren(...[1,2,3].map(s=>{const d=document.createElement('div');d.className='slot';const info=SlotTransfer.info(before.model,s);d.textContent='Slot '+s+' · '+(info.empty?'vuoto':info.tempo+' BPM')+' — '+(s===dest?'verrà sostituito':'conservato');return d}));$('plan').textContent='Caricherai il progetto del file nello slot '+dest+'. Gli slot '+plan.preserved.join(' e ')+' resteranno invariati.';$('resources').textContent='La libreria preset/kit e il banco campioni del dispositivo vengono conservati.'+(plan.bank.missing?' Il file non contiene un banco: i riferimenti ai campioni useranno quelli già sul dispositivo.':' Banco del file compatibile, verificato per contenuto.')+(plan.libraryDiffers?' La libreria preset del file non viene importata.':'');download(before.bytes,'Bloomy-prima-slot-'+dest+'-'+new Date().toISOString().replace(/[:.]/g,'-')+'.loom8');say('Controlla lo slot e salva il backup, poi premi «Carica il brano».');if(!await confirmLoad()){say('Caricamento annullato. Nessun dato scritto.');return;}say('Controllo che i dati del dispositivo non siano cambiati…');const fresh=await readDevice(dev.link);if(!SlotTransfer.sameArchive(before.model,fresh.model))throw Error('I dati dell’FM-1 sono cambiati. Nessun dato scritto: rileggi il dispositivo e prepara di nuovo il caricamento.');say('Invio del brano…');const code=await PB.restore(dev.link,plan.image,(what,pct)=>{if(what==='progress'){progress(pct);say('Invio: '+Math.floor(pct)+'%')}if(what==='ask')say('Sull’FM-1 compare RESTORE FROM USB? Premi SEL per caricare, HOME per annullare.');});if(code===10)throw Error('FM-1 in PLAY: ferma l’esecuzione e riprova.');if(code===11){say('Caricamento annullato sull’FM-1. Nessun dato scritto.');return;}if(code!==0)throw Error('Il dispositivo ha segnalato un errore di ripristino ('+code+'). Conserva il backup e rileggi il dispositivo.');written=true;say('Rilettura e verifica dei tre slot, preset e campioni…');const after=await readDevice(dev.link);SlotTransfer.verify(plan.model,after.model);say('Caricamento verificato: brano nello slot '+dest+'. Gli altri due slot, preset e campioni sono invariati. Per aprirlo: HOME → SEL → LOAD PROJECT → '+dest+'.');}catch(e){say((written?'Scrittura accettata; verifica non completata. Conserva il backup. ':'')+(e.message||String(e)),true);}finally{respond(false);dev?.link.close();lock(false);}}
+$('prepare').onclick=run;
+window.addEventListener('beforeunload',e=>{if(busy){e.preventDefault();e.returnValue='Caricamento in corso'}});
+globalThis.LoadUI={run,readDevice,connect};
+
+window.addEventListener('pagehide',()=>{for(const u of urls)URL.revokeObjectURL(u)});
+
+</script></html>
