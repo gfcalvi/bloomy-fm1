@@ -17,14 +17,15 @@
   "physical_flash_performed": false,
   "public_release_changed": false,
   "web_wasm_sha256": "a3e218f1806e4c8787934fa6acbae0f4bf5d1c3d58821f79da2b6cdb023a8413",
-  "tools_revision": "2.0-candidate",
+  "tools_revision": "2.0.1-candidate",
   "browser_suite_cases": {
-    "pass": 9,
+    "pass": 15,
     "fail": 0
   },
   "controller_and_merge_cases": {
-    "pass": 76,
+    "pass": 77,
     "fail": 0
   },
-  "candidate_url": "https://gfcalvi.github.io/bloomy-fm1/candidati/1.1.0/"
+  "candidate_url": "https://gfcalvi.github.io/bloomy-fm1/candidati/1.1.0/",
+  "backup_file_required": false
 }
