@@ -1,0 +1,41 @@
+{
+  "state": "RELEASE",
+  "slots": 5,
+  "firmware_version": "1.1.0",
+  "identity": "FM-1_10010100",
+  "firmware_sha256": "e22b52efbf433d8740c5ad271d827c37dbc3efd38dce2a6b4d4472fc4a35bf13",
+  "remote_core_id": "bloomy_s5",
+  "rfm1_sha256": "ab2c86331274e519ecb0ca29bc57f078f200962e5629fea19b6e5556efcb880a",
+  "sample_bank_capacity_bytes": 106496,
+  "factory_bank_bytes": 90505,
+  "app_bytes": 581404,
+  "app_free_bytes": 160,
+  "ram_bytes": 97352,
+  "ram_free_bytes": 952,
+  "pool_bytes": 334132,
+  "pool_capacity": 344064,
+  "physical_flash_performed": false,
+  "public_release_changed": false,
+  "web_wasm_sha256": "a3e218f1806e4c8787934fa6acbae0f4bf5d1c3d58821f79da2b6cdb023a8413",
+  "tools_revision": "2.0.1",
+  "browser_suite_cases": {
+    "pass": 15,
+    "fail": 0
+  },
+  "controller_and_merge_cases": {
+    "pass": 77,
+    "fail": 0
+  },
+  "backup_file_required": false,
+  "url": "https://gfcalvi.github.io/bloomy-fm1/",
+  "sections": [
+    "install",
+    "backup",
+    "load",
+    "convert",
+    "projects",
+    "save"
+  ],
+  "user_reported_fm1": "PASS",
+  "user_reported_iphone": "PASS"
+}

@@ -85,7 +85,7 @@ kbd { font: 600 .9em "Barlow Semi Condensed", "Barlow", sans-serif; border: 1px 
 .lm-top nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 @media (max-width: 520px) { .lm-top nav { margin-left: 0; width: 100%; } }
 </style></head>
-<body><header class="lm-top"><span class="lm-brand">Bloomy · Backup offline</span><nav><a href="Installazione-diretta.html">Installazione</a><a href="Manuale-Bloomy-1.0.pdf">Manuale</a></nav></header>
+<body><header class="lm-top"><span class="lm-brand">Bloomy · Backup offline</span><nav><a href="Installazione.html">Installazione</a><a href="Manuale.pdf">Manuale</a></nav></header>
 <main><p style="padding:12px;background:#12334b">Per caricare un solo brano conservando gli altri slot usa <a href="Carica-brano.html" onclick="if(parent!==window){parent.postMessage({bloomyTab:'load'},'*');return false}">Carica brano</a>. Il Restore di questa pagina sostituisce l’intero archivio.</p>
 <h1>Back up Bloomy</h1>
 <p class="lede">Save what Bloomy keeps to a file on this computer, and load them back later. Connect the FM-1 with a USB
@@ -104,7 +104,7 @@ cable. This page works in Chrome or Edge, and there is nothing to install.</p>
 
 <section class="card" aria-labelledby="bh">
   <h2 id="bh">Back up</h2>
-  <p>This saves everything to a <b>.loom8</b> file. That includes the three projects, the user presets and the samples. Bloomy can keep playing. If you have
+  <p>This saves everything to a <b>.loom8</b> file. That includes the five projects, the user presets and the samples. Bloomy can keep playing. If you have
   changes that aren't saved yet, stop Bloomy first so they go in the file too.</p>
   <div class="row"><button id="backup" class="primary" type="button">Back up</button></div>
 </section>
@@ -139,7 +139,7 @@ if(parent!==window&&typeof parent.navigator.requestMIDIAccess==='function'){
 </script><script>
 "use strict";
 // --- backup protocol: begin (tools/fm1_backup.py, device/backup.c; tested by tests/backup_page_test.mjs)
-const FW = { name: "Bloomy", id: "FM-1_10", magic: "LM8B", version: Number("1"), ext: "loom8" };
+const FW = { name: "Bloomy", id: "FM-1_10010100", magic: "LM8B", version: Number("2"), ext: "loom8" };
 const PB = (() => {
   const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];   // fm1_install.py / fm1ota.js
   const RS_REQ = 0x41, BU_REQ = 0x42, BU_END = 0x43;
@@ -237,14 +237,14 @@ const PB = (() => {
     if (u32(image, 12) !== crc32(image, 0, 12)) throw bad("This backup is damaged (its head).");
     if (ver < VERSION) throw bad(`This is a backup from an older ${NAME} (version ${ver}). This ${NAME} can't restore it. Nothing was changed.`);
     if (ver !== VERSION) throw bad(`This is a backup from another version of ${NAME} (version ${ver}). This ${NAME} can't restore it.`);
-    if (n !== 22 || flags > 1) throw bad('Questo backup ha una struttura non supportata: attesi 22 oggetti Bloomy.');
+    if (n !== 36 || flags > 1) throw bad('Questo backup ha una struttura non supportata: attesi 36 oggetti Bloomy.');
     if (image.length < HEAD + n * REC + 4) throw bad("This backup is cut short.");
     const objs = []; let pos = HEAD;
     for (let k = 0; k < n; k++) {
       if (pos + REC > image.length) throw bad("This backup is cut short.");
       const obj = u16(image, pos), ln = u16(image, pos + 2), crc = u32(image, pos + 4);
       pos += REC;
-      if (obj !== k + 1) throw bad('Ordine o identificativo oggetti del backup non valido.');
+      if (obj !== (k<22?k+1:k+2)) throw bad('Ordine o identificativo oggetti del backup non valido.');
       if (ln > PAYLOAD_MAX || pos + ln + 4 > image.length) throw bad(`This backup is damaged (part ${k + 1}).`);
       if (crc32(image, pos, pos + ln) !== crc) throw bad(`This backup is damaged (part ${k + 1}: a byte changed).`);
       objs.push({ obj, data: image.subarray(pos, pos + ln) });
@@ -429,7 +429,7 @@ const EXTRAS = (() => {
 const RATES = [11025, 16000, 22050, 32000];
 const AUTO = [22050, 16000, 11025];
 const BLK = 128, BLK_V2 = 64;          // a checkpoint every BLK samples: version 3 banks (0.8); 64 in version 2
-const REGIONS = [[0xC1000, 0x1B000], [0xE5000, 0x17000], [0x93000, 0x4000]];
+const REGIONS = [[0xDB000, 0x1000], [0xE7000, 0x15000], [0x93000, 0x4000]];
 const XDATA = [1, 2], REC_MARK = 0xF06;
 const BANK_SIZE = REGIONS.reduce((a, r) => a + r[1], 0);
 const BANK_HDR = 2048, BANK_MAX_DATA = BANK_SIZE - BANK_HDR, BANK_N = 32, BANK_VER = 3;
@@ -1352,3 +1352,4 @@ $("restore").addEventListener("click", async () => {
 </script>
 </body>
 </html>
+<script>document.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;const h=a.getAttribute('href')||'';if(h==='Manuale-Bloomy-1.1.pdf'||h==='sorgenti-1.1.0.zip'){a.target='_blank';a.rel='noopener';return}let tab;if(h==='Backup.html')tab='backup';if(h==='Installazione.html')tab='install';if(h==='Carica-brano.html')tab='load';if(tab&&parent!==window){e.preventDefault();parent.postMessage({bloomyTab:tab},'*');}},true);</script>

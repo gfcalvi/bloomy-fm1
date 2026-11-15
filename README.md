@@ -1,13 +1,8 @@
-# Bloomy 1.0.1 · strumenti 1.5
+# Bloomy 1.1.0 · Strumenti 2.0.1
+
 https://gfcalvi.github.io/bloomy-fm1/
 
-Installazione · Backup · Carica brano · Convertitore · Set e slot.
-Carica un singolo progetto in uno slot conservando gli altri due, preset e campioni.
-SAVE e STOP prima della lettura; backup preventivo e rilettura di verifica inclusi.
-Formati .bloomyproject/.loom8/.txt/.rfm1state/.fm1save. Banchi incompatibili bloccati.
-
-Mac: Chrome/Edge. iPhone: MIDIWeb Browser, anche dopo Make Available Offline.
-Aggiornare la copia salvata per vedere Strumenti1.5. Nessun login/server locale.
-Firmware invariato1.0.1; nessuna reinstallazione per usare Carica brano.
-Manuale edizione13. File personali elaborati nel browser, senza upload.
-Licenze e attribuzioni originali conservate in LICENZE.txt e sorgenti.
+Installazione · Backup/Restore · Carica brano · Salva brano · Convertitore · Set e slot.
+Cinque progetti salvati, uno attivo. Sedici voci, campioni 104 KiB.
+Mac: Chrome/Edge. iPhone: MIDIWeb Browser, Make Available Offline. Nessun login o server locale necessario.
+Backup di sicurezza facoltativo. Manuale completo edizione14.
