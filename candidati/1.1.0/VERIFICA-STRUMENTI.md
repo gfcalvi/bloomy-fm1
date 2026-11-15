@@ -8,7 +8,7 @@ Verifiche software PASS:
 - Cinque progetti distinti salvati, caricati e riaperti nel simulatore nativo; core RemoteFM1 conserva byte per byte tutti e cinque e il banco dopo boot/sync.
 - Migrazione Python/JavaScript identica; audio ADPCM, checkpoint, indici e metadati preservati. Banco sovradimensionato e file corrotti rifiutati.
 - Dieci andate/ritorni nei formati a tre/cinque slot; contenitore RemoteFM1 con core qualificato corrispondente. TXT senza banco come nel formato originale.
-- 74 controlli di script, merge fra sorgenti e destinazioni, estrazione/ricomposizione, annullamento, backup non corrispondente, dati modificati durante la conferma, identità errata, esiti Restore e rilettura errata, payload speciale nel .fm1save.
+- 76 controlli di script, merge fra sorgenti e destinazioni, estrazione/ricomposizione, annullamento, backup non corrispondente, dati modificati durante la conferma, identità errata, esiti Restore e rilettura errata, payload speciale nel .fm1save.
 - Cinque trasferimenti SysEx completi con dispositivo simulato e verifica degli altri slot.
 - Ritorno a tre slot con progetti 4/5 conservati in file separati; errore campioni/disconnessione e rilettura errata segnalati.
 - Nove percorsi DOM in Chrome: selettori e libreria quinto slot, estrazione, conversione, caricamento legacy, Backup, hash installazione e rollback.
