@@ -2554,7 +2554,7 @@ class Link {
 
 return {PB,EXTRAS,Link,async connect(access){return PB.find(access,(i,o)=>new Link(i,o))},async read(link,onProgress=()=>{}){const r=await PB.backup(link,n=>onProgress('Archivio',n));if(r.flags&1)throw Error('Ferma PLAY e premi SAVE prima di continuare.');const bank=await EXTRAS[0].backup(link,f=>onProgress('Campioni',f));return PB.join(r.image,[{tag:'LSMP',data:bank}])}}})();
 globalThis.Bridge5=(function(){// --- backup protocol: begin (tools/fm1_backup.py, device/backup.c; tested by tests/backup_page_test.mjs)
-const FW = { name: "Bloomy", id: "FM-1_10010101", magic: "LM8B", version: Number("2"), ext: "loom8" };
+const FW = { name: "Bloomy", id: "FM-1_1001010", magic: "LM8B", version: Number("2"), ext: "loom8" };
 const PB = (() => {
   const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];   // fm1_install.py / fm1ota.js
   const RS_REQ = 0x41, BU_REQ = 0x42, BU_END = 0x43;
@@ -3568,9 +3568,9 @@ function create(target,getBytes,notice,save){let state=null;return {
  state={model:planned.model,prepared};return state;
  },
  async after(midi,ui,s){if(!s||s!==state)throw Error('Piano di migrazione assente. Usa il backup salvato per completare il Restore.');const api=target===5?Bridge5:Bridge3;let dev=null;
- try{dev=await api.connect(midi);const split=api.PB.split(s.prepared);const code=await api.PB.restore(dev.link,split.image,(what,pct)=>{if(what==='ask')ui.say('Premi SEL sull’FM-1 per ripristinare i progetti migrati; HOME annulla.');if(what==='progress')ui.progress(pct)});if(code!==0)throw Error('Firmware aggiornato, Restore non completato (codice '+code+'). Conserva i file e usa Backup → Restore per completare.');
+ try{dev=await api.connect(midi);if(dev.id!=='FM-1_10010101')throw Error('Aggiornamento non confermato: attesa Bloomy 1.1.1, rilevata '+dev.id+'. Nessun Restore avviato.');const split=api.PB.split(s.prepared);const code=await api.PB.restore(dev.link,split.image,(what,pct)=>{if(what==='ask')ui.say('Premi SEL sull’FM-1 per ripristinare i progetti migrati; HOME annulla.');if(what==='progress')ui.progress(pct)});if(code!==0)throw Error('Firmware aggiornato, Restore non completato (codice '+code+'). Conserva i file e usa Backup → Restore per completare.');
  if(s.model.bank)await api.EXTRAS[0].restore(dev.link,s.model.bank,f=>ui.progress(f*100));
- const actual=Bloomy.loomRead(await api.read(dev.link));if(!same(s.model,actual))throw Error('Firmware aggiornato, rilettura dei dati non corrispondente. Conserva il backup e completa il Restore prima di usare il dispositivo.');ui.progress(100);ui.say('Bloomy '+(target===5?'1.1.0 · cinque':'1.0.1 · tre')+' slot: migrazione e rilettura verificate. Apri HOME → SEL → LOAD PROJECT.');return true;
+ const actual=Bloomy.loomRead(await api.read(dev.link));if(!same(s.model,actual))throw Error('Firmware aggiornato, rilettura dei dati non corrispondente. Conserva il backup e completa il Restore prima di usare il dispositivo.');ui.progress(100);ui.say('Bloomy '+(target===5?'1.1.1 · cinque':'1.0.1 · tre')+' slot: migrazione e rilettura verificate. Apri HOME → SEL → LOAD PROJECT.');return true;
  }finally{dev?.link.close()}
  }
  }}
