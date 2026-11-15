@@ -1,0 +1,15 @@
+{
+  "firmware": "1.1.1",
+  "tools": "2.0.2",
+  "identity": "FM-1_10010101",
+  "format": 24,
+  "notes_max": 250,
+  "title_max": 11,
+  "slots": 5,
+  "voices": 16,
+  "firmware_sha256": "fc78a7fc5c8e0e54628f2f33c57f3e7705986b1f8b055ada79aae5632331318e",
+  "rfm1_sha256": "343bbe89fa83de51a81e11013b4e9594ec04c9abb35bf56d4b8178142deaaf57",
+  "hardware": "NOT_RUN",
+  "host_notes": "PASS",
+  "status": "SEPARATE_REVISION"
+}
