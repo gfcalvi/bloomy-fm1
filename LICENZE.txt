@@ -1157,3 +1157,6 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 
 MP3 encoder: lamejs 1.2.1 by Alex Zhukov, a JavaScript port of LAME/jump3r, LGPL-3.0. Unmodified library embedded in the export worker. https://github.com/zhuker/lamejs ; https://lame.sourceforge.net/ . Full original source archive and license in sorgenti-audio-0.2.zip.
+
+
+MP3 encoder: lamejs 1.2.1 by Alex Zhukov, a JavaScript port of LAME/jump3r, LGPL-3.0. Unmodified library embedded in the export worker. https://github.com/zhuker/lamejs ; https://lame.sourceforge.net/ . Full original source archive and license in sorgenti-audio-0.3.zip.
