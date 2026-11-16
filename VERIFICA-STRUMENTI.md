@@ -7,3 +7,5 @@ Collaudo hardware utente positivo, compresi Size/Decay/Shimmer al massimo senza 
 Due build native identiche; loader di riferimento verificato; ASAN/UBSAN; 15 effetti precedenti byte-identici; cinque slot save/load; codec round-trip e boot RemoteFM1; installatore simulato; render WAV deterministico, somma stem+FX e cancellazione verificati.
 
 Shimmer comune al bus FX II; non esiste send separato della componente trasposta per traccia.
+
+Tools2.1.1: MP3encoder160kbps/stereo44100, ogniheaderframeverificato; durata, determinismo, annullamento eWAV16bitverificati. Song112bar@74BPM durata363.253s verificata, primo slot4barconservato. Testbrowserworker/ZIP/AudioContextdecode, PCMnon-silenzioso ecomandiUI. Firmware invariato. ProvaMP3suiOSfisicoNONeseguita dall’agente.

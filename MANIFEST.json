@@ -1,7 +1,7 @@
 {
   "state": "RELEASE",
   "firmware_version": "1.2.0",
-  "tools_revision": "2.1.0",
+  "tools_revision": "2.1.1",
   "identity": "FM-1_10010200",
   "firmware_sha256": "dedf1138f43480b68ff1d693da7126600178317b8fe1606e33eb34641441e87a",
   "rfm1_sha256": "f8c864e9311266a2b548472313723c8fb27ca0f205ec1e788514f23d61092273",
@@ -9,7 +9,7 @@
   "slots": 5,
   "voices": 16,
   "project_format": 24,
-  "manual_edition": 15,
+  "manual_edition": 16,
   "app_bytes": 579816,
   "app_free_bytes": 1748,
   "ram_bytes": 97336,
@@ -32,5 +32,13 @@
   "wav_bits": 16,
   "shimmer_per_track_amount": false,
   "backup_required_for_install": false,
-  "url": "https://gfcalvi.github.io/bloomy-fm1/"
+  "url": "https://gfcalvi.github.io/bloomy-fm1/",
+  "manual_pages": 110,
+  "audio_export": "0.2",
+  "audio_formats": [
+    "wav44100stereo16",
+    "mp344100stereo160kbps"
+  ],
+  "song_start": "restart_from_first_slot",
+  "renderer_wasm_sha256": "0a9e9480197ec82a0ae00a530f17fd3e3b6def13febec9516ead6d142fad50cf"
 }
