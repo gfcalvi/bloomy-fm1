@@ -1,6 +1,6 @@
 {
   "firmware": "1.1.2",
-  "tools": "2.0.5",
+  "tools": "2.0.6",
   "identity": "FM-1_10010102",
   "format": 24,
   "notes_max": 250,
@@ -14,5 +14,8 @@
   "app_binary_sha256": "2eaf242548e03e9a5c1375383e90474b8931f7ddda7abf661081c5241e461d01",
   "hardware": "NOT_RUN",
   "host_notes": "PASS",
-  "status": "SEPARATE_REVISION"
+  "status": "SEPARATE_REVISION",
+  "wav_export": "0.1",
+  "wav_engine": "1.1.2 browser-only",
+  "wav_hardware_change": false
 }
