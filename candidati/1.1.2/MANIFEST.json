@@ -1,0 +1,18 @@
+{
+  "firmware": "1.1.2",
+  "tools": "2.0.5",
+  "identity": "FM-1_10010102",
+  "format": 24,
+  "notes_max": 250,
+  "title_max": 11,
+  "slots": 5,
+  "voices": 16,
+  "firmware_sha256": "69835096f715216e88df5b91f3cf47ae41139146d5ad89cbc8004232b11169cd",
+  "rfm1_sha256": "e6d2c56b10866a5238b7ed69a4f3ab33aa297a08a9c64347d18f7de4fa0abeaa",
+  "native_build": "serial-reproducible-2026-11-16",
+  "prior_native_package_withdrawn": true,
+  "app_binary_sha256": "2eaf242548e03e9a5c1375383e90474b8931f7ddda7abf661081c5241e461d01",
+  "hardware": "NOT_RUN",
+  "host_notes": "PASS",
+  "status": "SEPARATE_REVISION"
+}
