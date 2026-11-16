@@ -1,8 +1,9 @@
-# Bloomy 1.1.0 · Strumenti 2.0.1
+# Bloomy 1.2.0 · Strumenti 2.1.0
 
 https://gfcalvi.github.io/bloomy-fm1/
 
-Installazione · Backup/Restore · Carica brano · Salva brano · Convertitore · Set e slot.
-Cinque progetti salvati, uno attivo. Sedici voci, campioni 104 KiB.
-Mac: Chrome/Edge. iPhone: MIDIWeb Browser, Make Available Offline. Nessun login o server locale necessario.
-Backup di sicurezza facoltativo. Manuale completo edizione14.
+Apri index.html o usa il sito. Mac/Windows: Chrome o Edge. iOS: MIDIWeb Browser, Make Available Offline. Nessun server locale necessario usando il sito HTTPS. PDF completo edizione15 incluso.
+
+Installazione diretta, backup facoltativo e separato. Backup/Restore, Carica brano, Salva brano e metadati, Convertitore, Set e slot, Esporta WAV (44.1kHz/16bit stereo).
+
+Firmware 1.2.0 identico al candidato collaudato: non occorre reinstallare se GLO/Setup indica già 1.2.0. Per aggiornare gli strumenti basta riaprire il sito e sostituire la copia offline.

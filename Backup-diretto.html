@@ -139,7 +139,7 @@ if(parent!==window&&typeof parent.navigator.requestMIDIAccess==='function'){
 </script><script>
 "use strict";
 // --- backup protocol: begin (tools/fm1_backup.py, device/backup.c; tested by tests/backup_page_test.mjs)
-const FW = { name: "Bloomy", id: "FM-1_10010100", magic: "LM8B", version: Number("2"), ext: "loom8" };
+const FW = { name: "Bloomy", id: "FM-1_1001010", magic: "LM8B", version: Number("2"), ext: "loom8" };
 const PB = (() => {
   const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];   // fm1_install.py / fm1ota.js
   const RS_REQ = 0x41, BU_REQ = 0x42, BU_END = 0x43;
@@ -336,7 +336,7 @@ const PB = (() => {
       try { await input.open(); await output.open(); } catch (_) { continue; }
       const link = makeLink(input, output);
       const id = await handshake(link);
-      if (id && id.startsWith(ID)) return { link, id, name: input.name };
+      if (id && ['FM-1_10010100','FM-1_10010101','FM-1_10010102','FM-1_10010200'].includes(id)) return { link, id, name: input.name };
       if (id) other = other || id;
       link.close();
     }
@@ -1352,4 +1352,4 @@ $("restore").addEventListener("click", async () => {
 </script>
 </body>
 </html>
-<script>document.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;const h=a.getAttribute('href')||'';if(h==='Manuale-Bloomy-1.1.pdf'||h==='sorgenti-1.1.0.zip'){a.target='_blank';a.rel='noopener';return}let tab;if(h==='Backup.html')tab='backup';if(h==='Installazione.html')tab='install';if(h==='Carica-brano.html')tab='load';if(tab&&parent!==window){e.preventDefault();parent.postMessage({bloomyTab:tab},'*');}},true);</script>
+<script>document.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;const h=a.getAttribute('href')||'';if(h==='Manuale-Bloomy-1.2.pdf'||h==='sorgenti-1.2.0.zip'){a.target='_blank';a.rel='noopener';return}let tab;if(h==='Backup.html')tab='backup';if(h==='Installazione.html')tab='install';if(h==='Carica-brano.html')tab='load';if(tab&&parent!==window){e.preventDefault();parent.postMessage({bloomyTab:tab},'*');}},true);</script>
