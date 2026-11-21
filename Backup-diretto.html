@@ -85,8 +85,8 @@ kbd { font: 600 .9em "Barlow Semi Condensed", "Barlow", sans-serif; border: 1px 
 .lm-top nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 @media (max-width: 520px) { .lm-top nav { margin-left: 0; width: 100%; } }
 </style></head>
-<body><header class="lm-top"><span class="lm-brand">Bloomy · Backup offline</span><nav><a href="Installazione.html">Installazione</a><a href="Manuale.pdf">Manuale</a></nav></header>
-<main><p style="padding:12px;background:#12334b">Per caricare un solo brano conservando gli altri slot usa <a href="Carica-brano.html" onclick="if(parent!==window){parent.postMessage({bloomyTab:'load'},'*');return false}">Carica brano</a>. Il Restore di questa pagina sostituisce l’intero archivio.</p>
+<body><header class="lm-top"><span class="lm-brand">Bloomy · Backup offline</span><nav><a href="Installazione.html">Installazione</a><a href="Manuale-Bloomy-1.3.4.pdf">Manuale</a></nav></header>
+<main><p style="border:1px solid #80d6ff;padding:10px">Bloomy 1.3.4 · Strumenti 2.3.4. Backup separato e facoltativo; i file vengono elaborati sul dispositivo.</p><p style="padding:12px;background:#12334b">Per caricare un solo brano conservando gli altri slot usa <a href="Carica-brano.html" onclick="if(parent!==window){parent.postMessage({bloomyTab:'load'},'*');return false}">Carica brano</a>. Il Restore di questa pagina sostituisce l’intero archivio.</p>
 <h1>Back up Bloomy</h1>
 <p class="lede">Save what Bloomy keeps to a file on this computer, and load them back later. Connect the FM-1 with a USB
 cable. This page works in Chrome or Edge, and there is nothing to install.</p>
@@ -336,7 +336,7 @@ const PB = (() => {
       try { await input.open(); await output.open(); } catch (_) { continue; }
       const link = makeLink(input, output);
       const id = await handshake(link);
-      if (id && ['FM-1_10010100','FM-1_10010101','FM-1_10010102','FM-1_10010200'].includes(id)) return { link, id, name: input.name };
+      if (id && ['FM-1_10010304'].includes(id)) return { link, id, name: input.name };
       if (id) other = other || id;
       link.close();
     }
@@ -1352,4 +1352,4 @@ $("restore").addEventListener("click", async () => {
 </script>
 </body>
 </html>
-<script>document.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;const h=a.getAttribute('href')||'';if(h==='Manuale-Bloomy-1.2.pdf'||h==='sorgenti-1.2.0.zip'){a.target='_blank';a.rel='noopener';return}let tab;if(h==='Backup.html')tab='backup';if(h==='Installazione.html')tab='install';if(h==='Carica-brano.html')tab='load';if(tab&&parent!==window){e.preventDefault();parent.postMessage({bloomyTab:tab},'*');}},true);</script>
+<script>document.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;const h=a.getAttribute('href')||'';if(h==='Manuale-Bloomy-1.3.4.pdf'||h==='sorgenti-1.3.4.zip'){a.target='_blank';a.rel='noopener';return}let tab;if(h==='index.html#backup')tab='backup';if(h==='Installazione.html')tab='install';if(h==='Carica-brano.html')tab='load';if(tab&&parent!==window){e.preventDefault();parent.postMessage({bloomyTab:tab},'*');}},true);</script>

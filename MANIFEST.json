@@ -1,57 +1,182 @@
 {
-  "state": "RELEASE",
-  "firmware_version": "1.2.0",
-  "tools_revision": "2.2.0",
-  "identity": "FM-1_10010200",
-  "firmware_sha256": "dedf1138f43480b68ff1d693da7126600178317b8fe1606e33eb34641441e87a",
-  "rfm1_sha256": "f8c864e9311266a2b548472313723c8fb27ca0f205ec1e788514f23d61092273",
-  "web_wasm_sha256": "441e992e915a472eeec95b331bd10bf0ee6a9d814040f0afbe5a0ab3e7dd5fae",
-  "slots": 5,
-  "voices": 16,
-  "project_format": 24,
-  "manual_edition": 16,
-  "app_bytes": 579816,
-  "app_free_bytes": 1748,
-  "ram_bytes": 97336,
-  "pool_bytes": 334384,
-  "sample_bank_capacity_bytes": 106496,
-  "user_reported_fm1": "PASS",
-  "hardware_report": "Size/Decay/Shimmer massimi, nessun rumore anomalo riferito",
-  "physical_flash_performed_by_agent": false,
-  "sections": [
-    "install",
-    "backup",
-    "load",
-    "save",
-    "convert",
-    "projects",
-    "wav",
-    "track"
-  ],
-  "wav_engine": "1.2.0 Shimmer",
-  "wav_rate": 44100,
-  "wav_bits": 16,
-  "shimmer_per_track_amount": false,
-  "backup_required_for_install": false,
-  "url": "https://gfcalvi.github.io/bloomy-fm1/",
-  "manual_pages": 110,
-  "audio_export": "0.3",
-  "audio_formats": [
-    "wav44100stereo16",
-    "mp344100stereo160kbps"
-  ],
-  "song_start": "restart_from_first_slot",
-  "renderer_wasm_sha256": "0a9e9480197ec82a0ae00a530f17fd3e3b6def13febec9516ead6d142fad50cf",
-  "track_transfer": {
-    "version": "1.0",
-    "file_only": true,
-    "preserves_other_tracks": true,
-    "scene_mapping": "Song slot/duration; conflicting reused scenes rejected",
-    "qualified_project_formats": [
-      23,
-      24
-    ],
-    "hardware_firmware_unchanged": true
-  },
-  "offline_package": "Bloomy-Tools-2.2.0.zip"
+  "firmware": "1.3.4",
+  "tools": "2.3.4",
+  "manual_edition": 17,
+  "manual_pages": 112,
+  "date": "2026-11-21",
+  "hardware_1_3_4": "NOT_RUN",
+  "files": {
+    ".nojekyll": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "Backup-diretto.html": {
+      "bytes": 72489,
+      "sha256": "e846226315977039cf508c601283181179b5baf4e34ce9c910736225b91ee2c0"
+    },
+    "Backup.html": {
+      "bytes": 135,
+      "sha256": "d16789519d6a698e9a0eec087505f9ef938a75d47c42b53f30c300cd880f33e4"
+    },
+    "Bloomy-1.3.4.fwsc": {
+      "bytes": 611747,
+      "sha256": "a8371c5472be25841e47d396ae27d8a39c513d4b49995b32aa38afc338247e8c"
+    },
+    "Bloomy-1.3.4.rfm1": {
+      "bytes": 1025872,
+      "sha256": "efaef5946a8412546be7b686c214473c99fe611028186bf114cad14431ca273c"
+    },
+    "Bloomy-Tools-2.3.4.zip": {
+      "bytes": 8039121,
+      "sha256": "01e328ac5c79ed3e81f677345ea5d3d539378df6494385f0989a88327882d4b1"
+    },
+    "Bloomy.html": {
+      "bytes": 6809401,
+      "sha256": "77c358c2f4cc7ed5b9597bc0a7d7e9031bcc292e57e321339aedd7be9895ec1b"
+    },
+    "Carica-brano.html": {
+      "bytes": 259860,
+      "sha256": "6e0b0b5cec1523f8e2cdea932f312ee2f45b4f2157741cb8192ca14dff58717b"
+    },
+    "Convertitore-diretto.html": {
+      "bytes": 1954720,
+      "sha256": "1a5b5e2636c7644de17e340697c119059e3cbd6cff5befd4b50ca012d30ebb85"
+    },
+    "Convertitore.html": {
+      "bytes": 137,
+      "sha256": "3b3757109f8b7ed06d60db4d41d8af3d966adc430dd812b2783840dc6e0565f5"
+    },
+    "Esporta-WAV.html": {
+      "bytes": 129,
+      "sha256": "6a957d3defec443c012e785c5da0403bf82ce97e48138f3dd6d0b16d84a878cc"
+    },
+    "Esporta-audio.html": {
+      "bytes": 1552106,
+      "sha256": "50ec537a92ae2e34a76d381bfed8b602f913abfb7d19f837d467a0ea892ea662"
+    },
+    "Guida-Esporta-WAV.pdf": {
+      "bytes": 944807,
+      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+    },
+    "Installazione-diretta.html": {
+      "bytes": 1034191,
+      "sha256": "ab160a60e4635c4ce16fe49e72143116b4ca10fc1ed1e4cc556b3bc24a36512a"
+    },
+    "Installazione.html": {
+      "bytes": 137,
+      "sha256": "29cc9b57b0de4b6e9d6cd3ca7983a4b97bdd3172682ed5f47f046f85c8d59c89"
+    },
+    "LICENSE-LAME.txt": {
+      "bytes": 8078,
+      "sha256": "b40d3a07e825cd707dc36f4bfd7c3d8c508952676a48365072403f0be8c515f6"
+    },
+    "LICENSE-LZFSE.txt": {
+      "bytes": 1514,
+      "sha256": "2a20082c2219edbbdb2e862a0566ba4f762a564ade7c04b09250ae4464bc4b32"
+    },
+    "LICENSE-MPL-2.0.txt": {
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+    },
+    "LICENSE-firmware.txt": {
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+    },
+    "LICENZE.txt": {
+      "bytes": 52378,
+      "sha256": "d88a0b1d3b5b46e9c883a06032022bb9b1b7745b587458388be2b05bd7acc3f8"
+    },
+    "Manuale-Bloomy-1.0.pdf": {
+      "bytes": 944807,
+      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+    },
+    "Manuale-Bloomy-1.1.pdf": {
+      "bytes": 944807,
+      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+    },
+    "Manuale-Bloomy-1.2.pdf": {
+      "bytes": 944807,
+      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+    },
+    "Manuale-Bloomy-1.3.4.pdf": {
+      "bytes": 944807,
+      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+    },
+    "Progetti-diretti.html": {
+      "bytes": 40406,
+      "sha256": "2530537dbdf52594c1e3b6f7b999c6bf57fc0740f8441e2385c6fc7325199df3"
+    },
+    "Progetti.html": {
+      "bytes": 139,
+      "sha256": "d59a1f045f0c57dce4f8b286ae4976b6ce24a06f482b11c30b2bcaadfdbfa102"
+    },
+    "README.md": {
+      "bytes": 2384,
+      "sha256": "53ad44ebba30ec6eebcf6e927b8817ecda2c9574e03df2a4c6cbebdddec784b6"
+    },
+    "RELEASE-1.3.4.md": {
+      "bytes": 2384,
+      "sha256": "53ad44ebba30ec6eebcf6e927b8817ecda2c9574e03df2a4c6cbebdddec784b6"
+    },
+    "Salva-brano.html": {
+      "bytes": 91166,
+      "sha256": "4ece03703e33faf194b412df05e6d4724a3b36946b982858ae927b2f7b0510d0"
+    },
+    "Sostituisci-traccia.html": {
+      "bytes": 97088,
+      "sha256": "8e59c6b7970ed497e38b90844671df042b9e920c5472b16180009b8e6b32a642"
+    },
+    "VERIFICA-STRUMENTI.md": {
+      "bytes": 143,
+      "sha256": "ab647920b0bb59d3baf86c6f6f78be688a57d15d8d2f5b549bebe3202e3b3bdd"
+    },
+    "VERIFICA.json": {
+      "bytes": 4632,
+      "sha256": "ec8c71c6fe29d139e03f95fd12dacd8203d67a49bbe70d4e036547327036d9b0"
+    },
+    "backup/index.html": {
+      "bytes": 140,
+      "sha256": "c90a9018a7675c150e31a2e7ceac31225ecd7905ac0f007916af51f5a5b8f4ba"
+    },
+    "convert/index.html": {
+      "bytes": 142,
+      "sha256": "b4501cac423716b184812e6d1c8b757656a34fb5c867f8a400a839ba066ae51b"
+    },
+    "emu/app.wasm": {
+      "bytes": 973502,
+      "sha256": "f8c575809097b92c0cb5e4425e815a5f31af175ef49d9d69cdfa281ef9aa1c23"
+    },
+    "emu/index.html": {
+      "bytes": 27194,
+      "sha256": "66aee58a5da63843cdfad7274b05074b04e96e15f1cb1d532376f8e882a71a0c"
+    },
+    "emu/worklet.js": {
+      "bytes": 3894,
+      "sha256": "b384025cee1a1e7b3004b21638d563a9acef3fa1325fdb5de3593fd3db595e5b"
+    },
+    "index.html": {
+      "bytes": 6809401,
+      "sha256": "77c358c2f4cc7ed5b9597bc0a7d7e9031bcc292e57e321339aedd7be9895ec1b"
+    },
+    "install/index.html": {
+      "bytes": 142,
+      "sha256": "d31aac49f49c89b1a32287a9359783e0db5c06d699278b00d96253f9c9167991"
+    },
+    "manual/index.html": {
+      "bytes": 162,
+      "sha256": "c52f95f41676520f4aef894128f5b5791fb6c77f9196300506ff6864fb1593bd"
+    },
+    "projects/index.html": {
+      "bytes": 144,
+      "sha256": "5eaaa7fed0c0b2d0b627f35d8502e0bcdac5920836c2f2b312c8a436ddfbaa1a"
+    },
+    "sorgenti-1.3.4.zip": {
+      "bytes": 10275521,
+      "sha256": "c661fc9a3ff0920cadb515cbffb9a7f3aef14b59a077797801e2865a9a816578"
+    },
+    "sorgenti-Knit-1.3.4.zip": {
+      "bytes": 10275521,
+      "sha256": "c661fc9a3ff0920cadb515cbffb9a7f3aef14b59a077797801e2865a9a816578"
+    }
+  }
 }

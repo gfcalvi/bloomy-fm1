@@ -1,18 +1,3 @@
-# Bloomy 1.2.0 - verifiche release
+# Verifiche Bloomy1.3.4/tools2.3.4
 
-Firmware identico al candidato collaudato dall’utente: dedf1138f43480b68ff1d693da7126600178317b8fe1606e33eb34641441e87a
-
-Collaudo hardware utente positivo, compresi Size/Decay/Shimmer al massimo senza rumori anomali. Nessuna nuova scrittura hardware effettuata dall’agente. Nessuna misura numerica CPU acquisita.
-
-Due build native identiche; loader di riferimento verificato; ASAN/UBSAN; 15 effetti precedenti byte-identici; cinque slot save/load; codec round-trip e boot RemoteFM1; installatore simulato; render WAV deterministico, somma stem+FX e cancellazione verificati.
-
-Shimmer comune al bus FX II; non esiste send separato della componente trasposta per traccia.
-
-Tools2.1.1: MP3encoder160kbps/stereo44100, ogniheaderframeverificato; durata, determinismo, annullamento eWAV16bitverificati. Song112bar@74BPM durata363.253s verificata, primo slot4barconservato. Testbrowserworker/ZIP/AudioContextdecode, PCMnon-silenzioso ecomandiUI. Firmware invariato. ProvaMP3suiOSfisicoNONeseguita dall’agente.
-
-Tools2.1.2: MP3encoder160kbps/stereo44100, ogniheaderframeverificato; durata, determinismo, annullamento eWAV16bitverificati. Song112bar@74BPM durata363.253s verificata, primo slot4barconservato. Testbrowserworker/ZIP/AudioContextdecode, PCMnon-silenzioso ecomandiUI. Firmware invariato. ProvaMP3suiOSfisicoNONeseguita dall’agente. Tools2.1.2: nomiZIP/MP3/WAV eRapporto coerenti; fallbacktitolo perslot/filename, caratteripericolosi e nomiriservati gestiti; 7browserPASS e unitnamesPASS.
-
-
-## Tools2.2.0 · Sostituisci traccia1.0
-
-18 verifiche su dati reali e casi di errore; 8 test browser PASS, inclusi viewport390px, stato errori, file RemoteFM1 senza crypto.subtle. Progetto combinato caricato nel simulatore nativo: parametri modificati della destinazione e basso sorgente verificati, Song completa/stop automatico, guard0 e coda eventi mai piena. Nota grafica footer Song del simulatore già nota. Test hardware/iOS fisico non eseguiti dall’agente.
+Vedere VERIFICA.json e RELEASE-1.3.4.md. Firmware identico al candidato verificato; nessun flash eseguito.

@@ -1,29 +1,15 @@
-# Bloomy Tools 2.2.0
+# Bloomy 1.3.4 · Strumenti 2.3.4
 
-https://gfcalvi.github.io/bloomy-fm1/
+Release predefinita: https://gfcalvi.github.io/bloomy-fm1/
 
-Firmware1.2.0 invariato. La novità è **Sostituisci traccia**.
+Knit: Osc1, Osc2 e Sub con filtri/inviluppi indipendenti. Chorus per traccia Knit/Jacquard prima di Delay e Shimmer; Mix indipendente, Rate/Depth comuni al progetto. FXI deve essere Delay/Phaser per usare l’inserto. GLO→Projects elenca i titoli brevi dei cinque slot e mette in evidenza il progetto aperto. Cinque slot e sedici voci conservati.
 
-## Sostituire il basso della propria r7 con quello della r10
+Otto strumenti: installazione diretta, Backup/Restore, Carica brano, Salva brano/titolo/note, Convertitore, Set e slot, Esporta audio e Sostituisci traccia. I campioni mancanti compatibili possono essere aggiunti e verificati prima di caricare una song, conservando risorse e altri slot. MP3 stereo160kb/s44,1kHz e WAV16bit44,1kHz; export dal file, senza dispositivo. Le uscite prendono il nome del brano.
 
-1. Salva/esporta il tuo progetto modificato con Salva brano.
-2. Apri Sostituisci traccia: a sinistra scegli **la tua r7 modificata**, a destra la r10.
-3. Scegli T2 in entrambe le colonne. Lascia attiva **Copia anche le assegnazioni nelle scene**: serve al ciclo XXX2XXX1.
-4. Premi Crea progetto con traccia sostituita, poi Salva .bloomyproject (o Condividi/Salva su File su iOS).
-5. Usa Carica brano per inserire il nuovo progetto nello slot desiderato.
+Mac/Windows: aprire il sito in Chrome/Edge oppure index.html nel pacchetto offline. iPhone/iPad: MIDIWeb Browser, sito HTTPS, Make Available Offline. Per aggiornare una copia salvata offline aprire il sito online e salvarlo nuovamente: verificare firmware1.3.4/tools2.3.4. Nessun Mac acceso o server locale necessario. Manuale PDF edizione17,112pagine, da scaricare separatamente.
 
-Le altre tracce, titolo/note, tempo, Song, Conductor, Weave globale, libreria e banco campioni restano quelli del progetto base. Suono, otto pattern, automazioni, Turing/Evolver e pattern/mute nelle scene della traccia scelta arrivano dalla sorgente. Gli effetti master restano quelli del progetto base: le mandate importate usano quegli effetti.
+Nuovi progetti formato28 e preset17; file precedenti qualificati supportati. Per combinare tracce fra formati recenti differenti, aprire e salvare prima entrambi i progetti con la1.3.4. Non aprire file nuovi con vecchi tools/firmware. Original conserva i timbri Knit precedenti finché non si modificano i nuovi controlli. Shimmer rimane un effetto globale sul busFXII: SendII dosa l’intero riverbero per traccia.
 
-Le Song devono avere sezioni corrispondenti per numero e durata; i numeri delle scene possono differire. Una scena riutilizzata con assegnazioni sorgente in conflitto viene bloccata. Si può scegliere di mantenere le assegnazioni delle scene del progetto base, disattivando la casella. Due progetti senza Song devono avere le stesse scene presenti.
+Due build native seriali identiche, loader di riferimento/CRC/app verificati, interfaccia host e WASM, regressione audio, formati, renderer e installatore MIDI simulato PASS. Le nuove funzioni1.3.4 non hanno ancora un collaudo hardware documentato; la promozione è richiesta dall’utente. Nessun flash effettuato dall’agente. Il precedente collaudo hardware positivo di Shimmer riguarda1.2.0. Dettagli in VERIFICA.json.
 
-Per conservare i mute dei kit sono ammessi trasferimenti melodica→melodica o Kit→Kit. Campioni usati dalla traccia devono coincidere nei banchi dei due progetti; nessun banco viene sostituito. Formati progetto23/24 qualificati; per file più vecchi aprire/salvare prima con Bloomy aggiornato.
-
-## Mac, iPhone/iPad e offline
-
-Mac: apri il sito con Chrome/Edge. Il pacchetto ZIP contiene anche index.html con tutti gli otto strumenti incorporati: puoi aprirlo con Chrome senza server locale. I file personali vengono elaborati sul dispositivo.
-
-iPhone/iPad: apri il sito in MIDIWeb Browser e usa **Make Available Offline**. Dopo l’aggiornamento sostituisci la copia offline e verifica **Strumenti2.2.0**. Questa procedura non richiede un Mac acceso. L’apertura diretta file:// da Files in MIDIWeb Browser dipende dall’app e non è il percorso consigliato.
-
-La pagina Sostituisci-traccia.html è autonoma e funziona anche salvata offline. Non usa Web MIDI e non scrive sull’FM-1. Non carica file su server e non richiede login.
-
-Manuale PDF edizione16 ed emulatore sono download separati, non inclusi nel pacchetto tools compatto. La guida della nuova funzione è questa; il PDF precedente non è stato modificato. Tutte le istruzioni di installazione degli strumenti precedenti restano valide.
+Backup facoltativo e separato dall’installazione. GLO→Setup mostra la versione effettivamente installata. Sorgenti corrispondenti e licenze disponibili nei download. Il pacchetto tools compatto contiene gli otto strumenti incorporati; firmware/core, manuale ed emulatore sono download separati sul sito.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bloomy 1.2.0 · Shimmer candidato — browser emulator</title>
+<title>Bloomy 1.3.4 — browser emulator</title>
 <meta name="description" content="Play Bloomy, a pocket groovebox firmware for the M-VAVE FM-1, in your browser: the same code the FM-1 runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,11 +72,11 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
 .lm-top nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 @media (max-width: 520px) { .lm-top nav { margin-left: 0; width: 100%; } }
 </style></head>
-<body><header class="lm-top"><a class="lm-brand" href="../"><span class="lm-threads" aria-hidden="true"><i style="background:#e6b432"></i><i style="background:#d66030"></i><i style="background:#a0aa46"></i><i style="background:#46aaa0"></i><i style="background:#6e96c8"></i><i style="background:#b46e96"></i><i style="background:#d2aa78"></i><i style="background:#96be96"></i></span>Bloomy</a><nav aria-label="Bloomy"><a href="../emu/" aria-current="page">Try it</a><a href="../Manuale-Bloomy-1.2.pdf">Manual</a><a href="../index.html#install">Install</a><a href="../index.html#projects">Set e slot</a><a href="../index.html#backup">Backup</a><a href="../sorgenti-1.2.0.zip">Source</a></nav></header>
+<body><header class="lm-top"><a class="lm-brand" href="../"><span class="lm-threads" aria-hidden="true"><i style="background:#e6b432"></i><i style="background:#d66030"></i><i style="background:#a0aa46"></i><i style="background:#46aaa0"></i><i style="background:#6e96c8"></i><i style="background:#b46e96"></i><i style="background:#d2aa78"></i><i style="background:#96be96"></i></span>Bloomy</a><nav aria-label="Bloomy"><a href="../emu/" aria-current="page">Try it</a><a href="../Manuale-Bloomy-1.3.4.pdf">Manual</a><a href="../index.html#install">Install</a><a href="../index.html#projects">Set e slot</a><a href="../index.html#backup">Backup</a><a href="../sorgenti-1.3.4.zip">Source</a></nav></header>
 <main>
 <header>
-  <h1>Bloomy 1.2.0 · Shimmer candidato</h1>
-  <p>Bloomy 1.2.0 · Shimmer candidato · Turing per track</p>
+  <h1>Bloomy 1.3.4</h1>
+  <p>Bloomy 1.3.4 · Turing per track</p>
 </header>
 
 <p class="turn">Turn your phone sideways for bigger controls.</p>
@@ -416,7 +416,7 @@ function saveStore(store) {
 // ---------------------------------------------------------------- switching on
 const status = document.getElementById("status"), cpu = document.getElementById("cpu");
 // BLUE_ASSET_PIN_BEGIN
-const BLUE_WASM_SHA256 = "441e992e915a472eeec95b331bd10bf0ee6a9d814040f0afbe5a0ab3e7dd5fae";
+const BLUE_WASM_SHA256 = "f8c575809097b92c0cb5e4425e815a5f31af175ef49d9d69cdfa281ef9aa1c23";
 const BLUE_WORKLET_SHA256 = "b384025cee1a1e7b3004b21638d563a9acef3fa1325fdb5de3593fd3db595e5b";
 // BLUE_ASSET_PIN_END
 async function switchOn() {
@@ -453,7 +453,7 @@ async function switchOn() {
     await ready;
     await ac.resume();
     document.getElementById("start").hidden = true;
-    status.textContent = `On · firmware Bloomy 1.2.0 · Shimmer candidato verificato · WASM ${loadedHash.slice(0,12)} · ${ac.sampleRate} Hz`;
+    status.textContent = `On · firmware Bloomy 1.3.4 verificato · WASM ${loadedHash.slice(0,12)} · ${ac.sampleRate} Hz`;
     syncButtons(); syncKeys();
   } catch (err) {
     go.disabled = false;
