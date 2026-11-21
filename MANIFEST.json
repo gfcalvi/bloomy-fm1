@@ -27,12 +27,12 @@
       "sha256": "efaef5946a8412546be7b686c214473c99fe611028186bf114cad14431ca273c"
     },
     "Bloomy-Tools-2.3.4.zip": {
-      "bytes": 8039121,
-      "sha256": "01e328ac5c79ed3e81f677345ea5d3d539378df6494385f0989a88327882d4b1"
+      "bytes": 8038953,
+      "sha256": "1270f08058d22bf5d83fd1b733fc8da7667a07cb93295bba45380cec061ce008"
     },
     "Bloomy.html": {
-      "bytes": 6809401,
-      "sha256": "77c358c2f4cc7ed5b9597bc0a7d7e9031bcc292e57e321339aedd7be9895ec1b"
+      "bytes": 6809153,
+      "sha256": "25f1005b03969581765761a9448a6d9ad044c0513e7f86398f55e141eb21a0dd"
     },
     "Carica-brano.html": {
       "bytes": 259860,
@@ -59,8 +59,8 @@
       "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
     },
     "Installazione-diretta.html": {
-      "bytes": 1034191,
-      "sha256": "ab160a60e4635c4ce16fe49e72143116b4ca10fc1ed1e4cc556b3bc24a36512a"
+      "bytes": 1034005,
+      "sha256": "48052c0a4e6cba727c6eb78f21680299fd60610b1a54d9580b91fa4dfb66d4a2"
     },
     "Installazione.html": {
       "bytes": 137,
@@ -155,8 +155,8 @@
       "sha256": "b384025cee1a1e7b3004b21638d563a9acef3fa1325fdb5de3593fd3db595e5b"
     },
     "index.html": {
-      "bytes": 6809401,
-      "sha256": "77c358c2f4cc7ed5b9597bc0a7d7e9031bcc292e57e321339aedd7be9895ec1b"
+      "bytes": 6809153,
+      "sha256": "25f1005b03969581765761a9448a6d9ad044c0513e7f86398f55e141eb21a0dd"
     },
     "install/index.html": {
       "bytes": 142,
