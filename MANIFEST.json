@@ -1,70 +1,70 @@
 {
-  "firmware": "1.3.4",
-  "tools": "2.3.4",
-  "manual_edition": 17,
+  "firmware": "1.3.5",
+  "tools": "2.3.5",
+  "manual_edition": 18,
   "manual_pages": 112,
   "date": "2026-11-21",
-  "hardware_1_3_4": "NOT_RUN",
+  "hardware_1_3_5": "NOT_RUN",
   "files": {
     ".nojekyll": {
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "Backup-diretto.html": {
-      "bytes": 72489,
-      "sha256": "e846226315977039cf508c601283181179b5baf4e34ce9c910736225b91ee2c0"
+      "bytes": 72505,
+      "sha256": "2fbb0381886e8ac463a2185e43e93ac764acdf4704258a77d021a93e2853bf7e"
     },
     "Backup.html": {
       "bytes": 135,
-      "sha256": "d16789519d6a698e9a0eec087505f9ef938a75d47c42b53f30c300cd880f33e4"
+      "sha256": "04c2f89a77d2f1d45878bfad355d900f3118b5c509245e596bcb79730d0f39a5"
     },
-    "Bloomy-1.3.4.fwsc": {
+    "Bloomy-1.3.5.fwsc": {
       "bytes": 611747,
-      "sha256": "a8371c5472be25841e47d396ae27d8a39c513d4b49995b32aa38afc338247e8c"
+      "sha256": "a7a5a860079350476a60fd3fc7dad8618d37723b9df3620778e4b809ee8de780"
     },
-    "Bloomy-1.3.4.rfm1": {
-      "bytes": 1025872,
-      "sha256": "efaef5946a8412546be7b686c214473c99fe611028186bf114cad14431ca273c"
+    "Bloomy-1.3.5.rfm1": {
+      "bytes": 1027522,
+      "sha256": "94cbae45d030eb5d76b0bee2aafc12488a45ec704921b0966bd311de6de8a275"
     },
-    "Bloomy-Tools-2.3.4.zip": {
-      "bytes": 8038953,
-      "sha256": "1270f08058d22bf5d83fd1b733fc8da7667a07cb93295bba45380cec061ce008"
+    "Bloomy-Tools-2.3.5.zip": {
+      "bytes": 8045626,
+      "sha256": "9d1dd0ed6240df7611cfb7578c39c648987f46e225ea4e304d840c9f2cb847d6"
     },
     "Bloomy.html": {
-      "bytes": 6809153,
-      "sha256": "25f1005b03969581765761a9448a6d9ad044c0513e7f86398f55e141eb21a0dd"
+      "bytes": 6814341,
+      "sha256": "c65b71cda4b482c1520878eabd65155bc6568834dc2fee5ed02ea0499706f6dd"
     },
     "Carica-brano.html": {
-      "bytes": 259860,
-      "sha256": "6e0b0b5cec1523f8e2cdea932f312ee2f45b4f2157741cb8192ca14dff58717b"
+      "bytes": 260157,
+      "sha256": "203c4d70aa537477f9ae8b974cfe0dae0fd6f8199d3682074e9ab727c276902d"
     },
     "Convertitore-diretto.html": {
-      "bytes": 1954720,
-      "sha256": "1a5b5e2636c7644de17e340697c119059e3cbd6cff5befd4b50ca012d30ebb85"
+      "bytes": 1954985,
+      "sha256": "aff45dde83e2ec55050d318a90a4720857e4d63cbe75c5344a2b8ca4d1ec21df"
     },
     "Convertitore.html": {
       "bytes": 137,
-      "sha256": "3b3757109f8b7ed06d60db4d41d8af3d966adc430dd812b2783840dc6e0565f5"
+      "sha256": "a31cd59fc523bac39a17ad15d34b1156c49e239ae324a7c6b074e2c96a707048"
     },
     "Esporta-WAV.html": {
       "bytes": 129,
-      "sha256": "6a957d3defec443c012e785c5da0403bf82ce97e48138f3dd6d0b16d84a878cc"
+      "sha256": "f01a1c90640a5e16819c4ba1e837ee3c52a83a551387d56aaea34228c40f813f"
     },
     "Esporta-audio.html": {
-      "bytes": 1552106,
-      "sha256": "50ec537a92ae2e34a76d381bfed8b602f913abfb7d19f837d467a0ea892ea662"
+      "bytes": 1554539,
+      "sha256": "45027ecf714a1f6e299c1cb4bdb6f744b6d2c37740996cc53e54148210e2cf4e"
     },
     "Guida-Esporta-WAV.pdf": {
-      "bytes": 944807,
-      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+      "bytes": 954236,
+      "sha256": "6176556f36381eafd4441f37754d08b7e8fddbcfe135cf14f0b6a3cdc8e534e9"
     },
     "Installazione-diretta.html": {
-      "bytes": 1034005,
-      "sha256": "48052c0a4e6cba727c6eb78f21680299fd60610b1a54d9580b91fa4dfb66d4a2"
+      "bytes": 1034021,
+      "sha256": "7def779c6f35f6651f3e9bd1f84e8a72e17d87a274afc19235374b36907f826a"
     },
     "Installazione.html": {
       "bytes": 137,
-      "sha256": "29cc9b57b0de4b6e9d6cd3ca7983a4b97bdd3172682ed5f47f046f85c8d59c89"
+      "sha256": "0e86e5954c7adaa9a849c25595884be1e2e1d9dd5f14614ae79e2ecf5d26c6ab"
     },
     "LICENSE-LAME.txt": {
       "bytes": 8078,
@@ -87,96 +87,96 @@
       "sha256": "d88a0b1d3b5b46e9c883a06032022bb9b1b7745b587458388be2b05bd7acc3f8"
     },
     "Manuale-Bloomy-1.0.pdf": {
-      "bytes": 944807,
-      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+      "bytes": 954236,
+      "sha256": "6176556f36381eafd4441f37754d08b7e8fddbcfe135cf14f0b6a3cdc8e534e9"
     },
     "Manuale-Bloomy-1.1.pdf": {
-      "bytes": 944807,
-      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+      "bytes": 954236,
+      "sha256": "6176556f36381eafd4441f37754d08b7e8fddbcfe135cf14f0b6a3cdc8e534e9"
     },
     "Manuale-Bloomy-1.2.pdf": {
-      "bytes": 944807,
-      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+      "bytes": 954236,
+      "sha256": "6176556f36381eafd4441f37754d08b7e8fddbcfe135cf14f0b6a3cdc8e534e9"
     },
-    "Manuale-Bloomy-1.3.4.pdf": {
-      "bytes": 944807,
-      "sha256": "f7038b2d6b75cc61e6ef7736f9e6c5c72f09a3ffd91392418a537687af9ed67b"
+    "Manuale-Bloomy-1.3.5.pdf": {
+      "bytes": 954236,
+      "sha256": "6176556f36381eafd4441f37754d08b7e8fddbcfe135cf14f0b6a3cdc8e534e9"
     },
     "Progetti-diretti.html": {
-      "bytes": 40406,
-      "sha256": "2530537dbdf52594c1e3b6f7b999c6bf57fc0740f8441e2385c6fc7325199df3"
+      "bytes": 40671,
+      "sha256": "df8d87f1addfad5d55c9ac67349ede2123d84b2ffaa5c9c1a7c5336a7865a940"
     },
     "Progetti.html": {
       "bytes": 139,
-      "sha256": "d59a1f045f0c57dce4f8b286ae4976b6ce24a06f482b11c30b2bcaadfdbfa102"
+      "sha256": "478b816842e7f049059baf0b6a8fc4a6926ba3d4f8be48a486f0cc87c246daa1"
     },
     "README.md": {
-      "bytes": 2384,
-      "sha256": "53ad44ebba30ec6eebcf6e927b8817ecda2c9574e03df2a4c6cbebdddec784b6"
+      "bytes": 2557,
+      "sha256": "7da6fce4bec86d090bea6c5dff47f35d4eae8152b6926f9b2e8d0d164199deac"
     },
-    "RELEASE-1.3.4.md": {
-      "bytes": 2384,
-      "sha256": "53ad44ebba30ec6eebcf6e927b8817ecda2c9574e03df2a4c6cbebdddec784b6"
+    "RELEASE-1.3.5.md": {
+      "bytes": 2557,
+      "sha256": "7da6fce4bec86d090bea6c5dff47f35d4eae8152b6926f9b2e8d0d164199deac"
     },
     "Salva-brano.html": {
-      "bytes": 91166,
-      "sha256": "4ece03703e33faf194b412df05e6d4724a3b36946b982858ae927b2f7b0510d0"
+      "bytes": 91463,
+      "sha256": "60478566ccab6cf588c706628c9d9a2f3656d37a560110b0e236c607152313a6"
     },
     "Sostituisci-traccia.html": {
-      "bytes": 97088,
-      "sha256": "8e59c6b7970ed497e38b90844671df042b9e920c5472b16180009b8e6b32a642"
+      "bytes": 97337,
+      "sha256": "525137282a842a89d720b425665d3a85ee997f4e78e5dab576d132c770738ca3"
     },
     "VERIFICA-STRUMENTI.md": {
       "bytes": 143,
-      "sha256": "ab647920b0bb59d3baf86c6f6f78be688a57d15d8d2f5b549bebe3202e3b3bdd"
+      "sha256": "088547040322834655ed432446e3a1638260cb424183555ab9db3661077e03f0"
     },
     "VERIFICA.json": {
-      "bytes": 4632,
-      "sha256": "ec8c71c6fe29d139e03f95fd12dacd8203d67a49bbe70d4e036547327036d9b0"
+      "bytes": 2212,
+      "sha256": "9fad07625b40e3cc315dda824b81766b083a684a4b73f34cb459aa898bae8107"
     },
     "backup/index.html": {
       "bytes": 140,
-      "sha256": "c90a9018a7675c150e31a2e7ceac31225ecd7905ac0f007916af51f5a5b8f4ba"
+      "sha256": "341032ec539789a9f5922dfd8d41e8fd3f6df40be18c731800c04d994b11a94c"
     },
     "convert/index.html": {
       "bytes": 142,
-      "sha256": "b4501cac423716b184812e6d1c8b757656a34fb5c867f8a400a839ba066ae51b"
+      "sha256": "5b41747a2ee82ada3436df38aa5e3a224c83f032e9c513feffbb5a5e6067c822"
     },
     "emu/app.wasm": {
-      "bytes": 973502,
-      "sha256": "f8c575809097b92c0cb5e4425e815a5f31af175ef49d9d69cdfa281ef9aa1c23"
+      "bytes": 975141,
+      "sha256": "aa4ec4d7e9b11198977d12ec63026abea0d9d54ec65cc009b781defd28531dac"
     },
     "emu/index.html": {
       "bytes": 27194,
-      "sha256": "66aee58a5da63843cdfad7274b05074b04e96e15f1cb1d532376f8e882a71a0c"
+      "sha256": "d8b4e3ede88a2ae95d59d876f2a138a023e05c056beb4851e4dd3aed6bcaef70"
     },
     "emu/worklet.js": {
       "bytes": 3894,
       "sha256": "b384025cee1a1e7b3004b21638d563a9acef3fa1325fdb5de3593fd3db595e5b"
     },
     "index.html": {
-      "bytes": 6809153,
-      "sha256": "25f1005b03969581765761a9448a6d9ad044c0513e7f86398f55e141eb21a0dd"
+      "bytes": 6814341,
+      "sha256": "c65b71cda4b482c1520878eabd65155bc6568834dc2fee5ed02ea0499706f6dd"
     },
     "install/index.html": {
       "bytes": 142,
-      "sha256": "d31aac49f49c89b1a32287a9359783e0db5c06d699278b00d96253f9c9167991"
+      "sha256": "7ade604fbf5d1e42a09535865a057ea3a6ec47f4e2b57c9ce36b6b7c175cca31"
     },
     "manual/index.html": {
       "bytes": 162,
-      "sha256": "c52f95f41676520f4aef894128f5b5791fb6c77f9196300506ff6864fb1593bd"
+      "sha256": "5aa528f4594dccd092ec7b8a995b6229cfe783f4a0fed2688af253616b06a1e8"
     },
     "projects/index.html": {
       "bytes": 144,
-      "sha256": "5eaaa7fed0c0b2d0b627f35d8502e0bcdac5920836c2f2b312c8a436ddfbaa1a"
+      "sha256": "da730a2a633add48ced4922657c54684bbe7539413c2b6fbcdd61d16afb2f9d2"
     },
-    "sorgenti-1.3.4.zip": {
-      "bytes": 10275521,
-      "sha256": "c661fc9a3ff0920cadb515cbffb9a7f3aef14b59a077797801e2865a9a816578"
+    "sorgenti-1.3.5.zip": {
+      "bytes": 10269384,
+      "sha256": "483f555a67a5bcf206a52eae2dea0ed0e1713ba0e2f34af0ad447aa31df8645a"
     },
-    "sorgenti-Knit-1.3.4.zip": {
-      "bytes": 10275521,
-      "sha256": "c661fc9a3ff0920cadb515cbffb9a7f3aef14b59a077797801e2865a9a816578"
+    "sorgenti-Knit-1.3.5.zip": {
+      "bytes": 10269384,
+      "sha256": "483f555a67a5bcf206a52eae2dea0ed0e1713ba0e2f34af0ad447aa31df8645a"
     }
   }
 }

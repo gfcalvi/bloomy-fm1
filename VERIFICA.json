@@ -1,13 +1,15 @@
 {
   "date": "2026-11-21",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "status": "RELEASE_DEFAULT_USER_AUTHORIZED",
-  "hardware": "NOT_RUN_1.3.4",
-  "browser_interactive": "PASS_RELEASE_BOOT_WITH_PINNED_ASSETS",
+  "hardware": "NOT_RUN_1.3.5",
   "iOS": "NOT_RUN",
-  "public_deployment": "Deployment verification tracked separately",
-  "image_bytes": 580884,
-  "image_free_bytes": 680,
+  "voices": 16,
+  "project_slots": 5,
+  "project_format": 28,
+  "preset_format": 17,
+  "image_bytes": 581252,
+  "image_free_bytes": 312,
   "static_ram": [
     97660,
     98304
@@ -17,102 +19,56 @@
     344064
   ],
   "pool_reserve": 8192,
-  "voices": 16,
-  "project_slots": 5,
-  "project_format": 28,
-  "preset_format": 17,
   "page": {
     "group": "Global",
-    "order": [
-      "Mix",
-      "Projects",
-      "Master EQ",
-      "Master color",
-      "Master out",
-      "LFO",
-      "Setup",
-      "Song notes"
-    ],
-    "read_only": true,
-    "titles": "existing 11-character project names",
-    "highlight": "loaded slot; working name if unsaved",
-    "states": [
-      "empty slot",
-      "unsaved changes",
-      "current project without slot"
-    ],
-    "flash_reads": "cached on entry; invalidated on settings save, slot change or redraw"
+    "name": "Projects",
+    "read_only": false,
+    "SELECT": "Global pages, unchanged",
+    "KNOB1": "slot cursor independent of active project",
+    "SEL": "request then confirm load or new in the chosen empty slot",
+    "HOME": "cancel confirmation",
+    "dirty": "DISCARD UNSAVED! warning in confirmation",
+    "empty": "same NEW PROJECT path, assigned to the selected empty slot; SAVE/AUTOSAVE retain normal rules",
+    "invalid": "existing unreadable settings refused without overwrite",
+    "transport": "browsing/cancel preserve playback; confirmed load/new stops playback as before"
   },
+  "formats_protocol_audio": "unchanged from1.3.4",
+  "native_builds": "two serial byte-identical",
   "checks": {
-    "projects": "PASS",
+    "switch": "PASS",
+    "guard": "PASS",
+    "autosave": "PASS",
     "projects-web": "PASS",
-    "ui": "PASS",
-    "global-controls": "PASS",
-    "wavetable-ui": "PASS",
-    "upgrade25": "PASS",
-    "upgrade26": "PASS",
-    "upgrade27": "PASS",
-    "formats": "PASS",
+    "audio-identical": "PASS",
     "actual-tools": "PASS",
     "qualified-formats": "PASS",
-    "syntax": "PASS",
+    "sample-loading": "PASS",
     "web-render": "PASS",
-    "rfm": "PASS",
-    "emu": "PASS",
-    "ota": "PASS",
-    "stock-ota": "PASS",
     "installer-sources": "PASS",
     "installer-guard": "PASS",
-    "sample-loading": "PASS",
     "verify-native": "PASS",
-    "audio-identical": "PASS"
-  },
-  "native_builds": "two serial byte-identical",
-  "loader": "qualified reference after version normalization",
-  "unchanged_from_1.3.3": {
-    "engine.c": "997c886ed7172a23dd4f877895a4ff6bf214e6c3fbb0ee9b1a76496b892e06fe",
-    "dsp/tweed.h": "f8845b04ac55657997b448f048585859a16f79ea0b36996631fa4282f65295d7",
-    "dsp/cr78_samples.h": "a38d7a6f913537bf72ed1616c250b91ee58d325f690309ce0dc3735b12561eab",
-    "dsp/fx.h": "65e349ca3a62be423d48a5adeb3e435b3d4043f6b893d75cd01fd3410cad4f5d",
-    "dsp/xmod.h": "9fe9ac4944758c7780eaed8d85dd5585b9a47872ea89ca658c0b24bcb7f334e3",
-    "dsp/digisophie.h": "8da1910493586819d959502f739f369ee5f9ae50c9cd99f9bac7174461dbe2c1",
-    "dsp/synth.h": "a86e84b12e8fc8d9b3ca58eabe9e92f0b616079e82c33b9de263604e5165b6b8",
-    "dsp/bench.h": "2ff831cec54f6d93860af958418abb09ae709419f66b64099c8ba5b5e9c31260",
-    "dsp/drumline.h": "4255e47b4e77758d9628dc81a8bd2e2dde0739c70df8f0b0c82b1014516a1d98",
-    "dsp/hybrid_samples.h": "883879141e33847c7369c49d4c66af2c8fb4f3beee62946e033bc30459f502a3",
-    "dsp/sample.c": "a8af1a0bc481ce8fa72e9eb0ba3a814c65cf637760d46b20ddc0430985e5a510",
-    "dsp/psxrev.h": "2cabec219014ea15278217d2a839da7a9e107a066a62944d395ad23890b849aa",
-    "dsp/braids.h": "ca3b7368c8434f933140e5ea9b666326a100774cc25b1eeb5bc76b8b303d17b6",
-    "dsp/digisophie.c": "1a5e92aad090cc1454bef3fe21bd0a2d348f46316f18008130d660c3830278c7",
-    "dsp/fx.c": "c6cf1519d1da72eee4eb3bcd1f935cefc55faa4134f8c9b23e7d267aba49cdf3",
-    "dsp/drumline.c": "6d327575e3a4e053f4b46e509777106c3254d6eadc67149748536068a94b72ef",
-    "dsp/digisophie_sin.inc": "76eaf1116bdca14a78ee073252903679776305e7e94a8456a56ca171716fd60a",
-    "dsp/bench.c": "a24edd773fd4de29dd59f3763bf98dfe024b327ab9d021261b8cc921a49c68be",
-    "dsp/synth.c": "962129ea1cff781058dc01b98fa66d32c0a1b903674eaf4efc5ed74c874ac6a9",
-    "dsp/sample.h": "10baf53c205d662cfda9ace4e2e88b0b060e46b8dde2679d6df3a11cabfc43f1",
-    "seq/seq.h": "044840aa6817b3671fb5d5a703d4fced899808e4a83945065c7ec66282596f4d",
-    "seq/pattern.h": "c7dad8e9e38a1e88b69eb9331a6ae528990522e8c7be952f34544209f8b6cb95",
-    "seq/seq.c": "94768478113a9f37151b6f18a13aa25900c6750e1a8c05603ee831877237d882",
-    "seq/evolve_impl.h": "be81dd7cede0b7a0a7379d335954ce675b50d2a3224108fd1db1188242983cbf",
-    "seq/evolve.h": "0518a474ad05abf49296be6908f4d5593e9539810cbd11814dc16cefb02c03c4",
-    "seq/pattern.c": "ee25a3901ec8372864f0a11fa61dde25d0265ec27a2186dd6e147c927bce22a5"
+    "ota": "PASS",
+    "stock-ota": "PASS",
+    "rfm": "PASS"
   },
   "artifacts": {
-    "Bloomy-1.3.4.fwsc": {
+    "Bloomy-1.3.5.fwsc": {
       "bytes": 611747,
-      "sha256": "a8371c5472be25841e47d396ae27d8a39c513d4b49995b32aa38afc338247e8c"
+      "sha256": "a7a5a860079350476a60fd3fc7dad8618d37723b9df3620778e4b809ee8de780"
     },
-    "Bloomy-1.3.4.rfm1": {
-      "bytes": 1025872,
-      "sha256": "efaef5946a8412546be7b686c214473c99fe611028186bf114cad14431ca273c"
+    "Bloomy-1.3.5.rfm1": {
+      "bytes": 1027522,
+      "sha256": "94cbae45d030eb5d76b0bee2aafc12488a45ec704921b0966bd311de6de8a275"
     },
     "emu/app.wasm": {
-      "bytes": 973502,
-      "sha256": "f8c575809097b92c0cb5e4425e815a5f31af175ef49d9d69cdfa281ef9aa1c23"
+      "bytes": 975141,
+      "sha256": "aa4ec4d7e9b11198977d12ec63026abea0d9d54ec65cc009b781defd28531dac"
     }
   },
-  "tools": "2.3.4",
-  "manual_edition": 17,
+  "tools": "2.3.5",
+  "manual_edition": 18,
   "manual_pages": 112,
-  "promotion_date": "2026-11-21"
+  "promotion_date": "2026-11-21",
+  "public_deployment": "Deployment verification tracked separately",
+  "browser_interactive": "PASS_RELEASE_BOOT_WITH_PINNED_ASSETS"
 }
